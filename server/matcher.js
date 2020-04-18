@@ -7,6 +7,7 @@ const fileUtils = require("./utils/fileutils");
 const photosPath = 'server/static/photos';
 const token = '9056f910-f148-4264-8a76-6c4cc6cf07eb';
 const minPretty = 0.5;
+const superPretty = 0.8;
 
 const matcher = async () => {
     let results = await fetchProfiles();
@@ -98,16 +99,17 @@ const categorizeUser = async (prediction, user) => {
         const finalPrediction = prettySum / photosCount;
         console.log(`Final prediction for ${user}: ${finalPrediction}`);
         if (finalPrediction >= minPretty) {
-            await likeUser(user);
+            const superLike = finalPrediction >= superPretty;
+            await likeUser(user, superLike);
         } else {
             await rejectUser(user);
         }
     }
 };
 
-const likeUser = async (userId) => {
+const likeUser = async (userId, superLike) => {
     api.setToken(token);
-    await api.likeProfile(userId);
+    await api.likeProfile(userId, superLike);
 };
 
 const rejectUser = async (userId) => {

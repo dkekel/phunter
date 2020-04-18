@@ -5,7 +5,7 @@ let apiToken;
 
 let setToken = (token) => apiToken = token;
 
-let getProfile = () => fetch(
+let getProfile = async () => await fetch(
     apiUrl + '/profile',
     {headers: {'X-Auth-Token': apiToken}}
 );
@@ -20,17 +20,25 @@ let getFeed = () => fetch(
     {headers: {'X-Auth-Token': apiToken}}
 );
 
-let likeProfile = async (userId) => {
+let likeProfile = async (userId, superLike) => {
     try {
+        const canSuperLike = superLike && await checkSuperLikes();
+        const likeUrl = apiUrl + '/like/' + userId + (canSuperLike ? '/super' : '');
         const response = await fetch(
-            apiUrl + '/like/' + userId,
+            likeUrl,
             {method: 'post', headers: {'X-Auth-Token': apiToken}}
         );
         const json = await checkStatus(response);
-        console.log(`Liked user ${userId}; Result: ${json.status}`)
+        console.log(`${(canSuperLike ? 'Super' : '')} Liked user ${userId}; Result: ${json.status}`)
     } catch (error) {
         console.error(`Error liking user ${userId}; Reason: ${error}`)
     }
+};
+
+const checkSuperLikes = async () => {
+    const response = await getProfile();
+    const profileJson = await checkStatus(response);
+    return profileJson.data.super_likes.remaining > 0;
 };
 
 let rejectProfile = async (userId) => {
