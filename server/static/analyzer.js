@@ -25,23 +25,29 @@ async function init() {
         labelContainer.appendChild(document.createElement("div"));
     }
 
-    await getUsers();
+    let feedSize = await getUsers();
+    while (feedSize > 0) {
+        feedSize = await getUsers();
+    }
 }
 
 const getUsers = async () => {
-    const request = new XMLHttpRequest();
-    request.open('GET', 'http://localhost:3000/feed', true);
-    request.onload = async () => {
-        const data = JSON.parse(request.response);
-        const users = data.users;
-        for (let user of users) {
-            await predictImages(user.userId);
-            sleep(1500);
-        }
-    };
+    return new Promise(resolve => {
+        const request = new XMLHttpRequest();
+        request.open('GET', 'http://localhost:3000/feed', true);
+        request.onload = async () => {
+            const data = JSON.parse(request.response);
+            const users = data.users;
+            for (let user of users) {
+                await predictImages(user.userId);
+                sleep(1500);
+            }
+            resolve(users.length);
+        };
 
-    // Send request
-    request.send();
+        // Send request
+        request.send();
+    });
 };
 
 const predictImages = async (userId) => {
