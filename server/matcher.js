@@ -8,6 +8,7 @@ const photosPath = 'server/static/photos';
 const token = '9056f910-f148-4264-8a76-6c4cc6cf07eb';
 const minPretty = 0.5;
 const superPretty = 0.8;
+const maxResults = 15;
 
 const matcher = async () => {
     let results = await fetchProfiles();
@@ -39,8 +40,8 @@ const processFeed = async () => {
 };
 
 const limitResults = (results) => {
-    if (results.length > 10) {
-        return results.slice(0, 10);
+    if (results.length > maxResults) {
+        return results.slice(0, maxResults);
     }
     return results;
 };
