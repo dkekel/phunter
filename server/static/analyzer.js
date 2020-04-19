@@ -7,6 +7,8 @@ const URL = "https://teachablemachine.withgoogle.com/models/K2JgHmctg/";
 
 let model, labelContainer, thumbnailContainer, infoLog, maxPredictions;
 
+const fibonacciMapping = {"0": 0, "1": 0.1, "2": 0.2, "3": 0.3, "5": 0.5, "8": 0.8, "PARFAIT": 1};
+
 // Load the image model and setup the webcam
 async function init() {
     const modelURL = URL + "model.json";
@@ -181,7 +183,15 @@ const appendFeedSizeLog = (candidatesCount) => {
 
 const appendUserTotalLog = (prettyScore, userName) => {
     const logRecord = createLogLine();
-    logRecord.innerHTML = `<b>${userName}</b> score: ${prettyScore}`;
+    const roundedScore = parseFloat(prettyScore.toFixed(1));
+    let fibonacciScore;
+    for (let key in fibonacciMapping) {
+        if (roundedScore <= fibonacciMapping[key]) {
+            fibonacciScore = key;
+            break;
+        }
+    }
+    logRecord.innerHTML = `<b>${userName}</b> score: ${fibonacciScore}`;
 };
 
 const createLogLine = () => {
