@@ -40,6 +40,7 @@ const getUsers = async () => {
     return new Promise(resolve => {
         const request = new XMLHttpRequest();
         request.open('GET', 'http://localhost:3000/feed', true);
+        addTokenHeader(request);
         request.onload = async () => {
             const data = JSON.parse(request.response);
             const users = data.users;
@@ -128,8 +129,14 @@ const categorizeResult = (result) => {
     const data = JSON.stringify(result);
     request.open("POST", 'http://localhost:3000/categorize', false);
     request.setRequestHeader("Content-Type", "application/json");
+    addTokenHeader(request);
     request.send(data);
     return request;
+};
+
+const addTokenHeader = (request) => {
+    const token = document.getElementById("api-token").value;
+    request.setRequestHeader("Api-Token", token);
 };
 
 const sleep = (miliseconds) => {

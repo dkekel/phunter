@@ -14,6 +14,13 @@
     <div class="container">
         <div class="text-center">
             <button class="btn btn-success" type="button" onclick="init()">Start</button>
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon1">API Token</span>
+                </div>
+                <input id="api-token" type="text" class="form-control" placeholder="API Token" aria-label="Username"
+                       aria-describedby="basic-addon1" value="">
+            </div>
             <div id="label-container" class="alert alert-info"></div>
             <img id="test-img" class="recognition-image img-thumbnail rounded"/>
         </div>

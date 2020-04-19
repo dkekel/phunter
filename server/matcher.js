@@ -5,10 +5,9 @@ const fs = require("fs");
 const fileUtils = require("./utils/fileutils");
 
 const photosPath = 'server/static/photos';
-const token = '9056f910-f148-4264-8a76-6c4cc6cf07eb';
-const minPretty = 0.5;
+const minPretty = 0.4;
 const superPretty = 0.8;
-const maxResults = 15;
+const maxResults = 10;
 
 const matcher = async () => {
     let results = await fetchProfiles();
@@ -30,7 +29,7 @@ const getStoredFeed = async () => {
     return userList;
 };
 
-const processFeed = async () => {
+const processFeed = async (token) => {
     api.setToken(token);
     const results = await fetchProfiles();
     console.info(`Fetched feed with ${results.length} results`);
@@ -82,9 +81,10 @@ const extractFaces = async (userId) => {
     return await faceApi.recognizeFaces(userPhotos);
 };
 
-const categorizeUser = async (prediction, user) => {
+const categorizeUser = async (prediction, user, token) => {
     let prettySum = 0;
     let photosCount = 0;
+    api.setToken(token);
     for (let key in prediction) {
         photosCount++;
         const photoResult = prediction[key];
@@ -101,21 +101,11 @@ const categorizeUser = async (prediction, user) => {
         if (finalPrediction >= minPretty) {
             console.info(`Final prediction for ${user}: ${finalPrediction}`);
             const superLike = finalPrediction >= superPretty;
-            await likeUser(user, superLike);
+            await api.likeProfile(user, superLike);
         } else {
-            await rejectUser(user);
+            await api.rejectProfile(user);
         }
     }
-};
-
-const likeUser = async (userId, superLike) => {
-    api.setToken(token);
-    await api.likeProfile(userId, superLike);
-};
-
-const rejectUser = async (userId) => {
-    api.setToken(token);
-    await api.rejectProfile(userId);
 };
 
 module.exports = {processFeed, getStoredFeed, categorizeUser};

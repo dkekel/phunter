@@ -19,7 +19,8 @@ app.get("/", (req, res, next) => {
 });
 
 app.get("/feed", async (req, res, next) => {
-    const userList = await matcher.processFeed();
+    const apiToken = req.header('Api-Token');
+    const userList = await matcher.processFeed(apiToken);
     // const userList = await matcher.getStoredFeed();
     res.json({users: userList});
 });
@@ -31,7 +32,8 @@ app.get("/images/:userId", async (req, res, next) => {
 });
 
 app.post("/categorize", async (req, res, next) => {
+    const apiToken = req.header('Api-Token');
     const reqBody = req.body;
-    await matcher.categorizeUser(reqBody.result, reqBody.user);
+    await matcher.categorizeUser(reqBody.result, reqBody.user, apiToken);
     res.end("ok");
 });
