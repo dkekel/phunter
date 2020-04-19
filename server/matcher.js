@@ -104,11 +104,13 @@ const categorizeUser = async (prediction, user, token) => {
         if (finalPrediction >= minPretty) {
             console.info(`Final prediction for ${user}: ${finalPrediction}`);
             const superLike = finalPrediction >= superPretty;
+            await fileUtils.moveSelectedPhotos(user, "liked");
             await api.likeProfile(user, superLike);
         } else {
             await api.rejectProfile(user);
         }
     }
+    await fileUtils.removeUserFolder(user);
 };
 
 module.exports = {processFeed, getStoredFeed, categorizeUser};
