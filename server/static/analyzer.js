@@ -114,12 +114,12 @@ const updateProbabilityBars = (totalResult) => {
             let classTotal = perClassTotal[i];
             classTotal += imageResult[i].probability;
             perClassTotal[i] = classTotal;
-            const classNormalized = classTotal / totalCount;
+            const classNormalized = (classTotal / totalCount)  * 100;
             labelContainer.childNodes[i].innerHTML =
                 `<div class="progress-bar ${i === 0 ? 'bg-success' : 'bg-warning'}" 
-role="progressbar" style="width: ${classNormalized * 100}%" 
-aria-valuenow="${classNormalized}" aria-valuemin="0" aria-valuemax="1">
-${imageResult[i].className}: ${classNormalized.toFixed(2)}</div>`;
+role="progressbar" style="width: ${classNormalized}%" 
+aria-valuenow="${classNormalized}" aria-valuemin="0" aria-valuemax="100">
+${imageResult[i].className}: ${classNormalized.toFixed(2)}%</div>`;
         }
     }
 };
