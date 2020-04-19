@@ -5,7 +5,7 @@
 // const URL = "https://teachablemachine.withgoogle.com/models/vLznqld0l/";
 const URL = "https://teachablemachine.withgoogle.com/models/K2JgHmctg/";
 
-let model, labelContainer, thumbnailContainer, maxPredictions;
+let model, labelContainer, thumbnailContainer, infoLog, maxPredictions;
 
 // Load the image model and setup the webcam
 async function init() {
@@ -21,6 +21,7 @@ async function init() {
 
     // append elements to the DOM
     labelContainer = document.getElementById("label-container");
+    clearBars();
     for (let i = 0; i < maxPredictions; i++) { // and class labels
         const childElement = document.createElement("div");
         childElement.className = "progress";
@@ -29,6 +30,9 @@ async function init() {
     }
 
     thumbnailContainer = document.getElementById("user-thumbnails");
+    clearThumbnails();
+    infoLog = document.getElementById("info-log");
+    clearLog();
 
     let feedSize = await getUsers();
     while (feedSize > 0) {
@@ -44,19 +48,23 @@ const getUsers = async () => {
         request.onload = async () => {
             const data = JSON.parse(request.response);
             const users = data.users;
+            appendFeedSizeLog(users.length);
             for (let user of users) {
-                await predictImages(user.userId);
+                await predictImages(user);
                 sleep(1500);
             }
             resolve(users.length);
         };
 
         // Send request
+        appendFeedLoadingLog();
         request.send();
     });
 };
 
-const predictImages = async (userId) => {
+const predictImages = async (user) => {
+    const userId = user.userId;
+    const userName = user.userName;
     return new Promise((resolve, reject) => {
         const request = new XMLHttpRequest();
         request.open('GET', `http://localhost:3000/images/${userId}`, false);
@@ -73,15 +81,23 @@ const predictImages = async (userId) => {
                 appendThumbnail(userId, image, predictionResult);
                 updateProbabilityBars(result);
             }
-            await categorizeResult({user: userId, result: result});
+            await categorizeResult({user: userId, result: result}, userName);
             resolve();
         };
         request.send();
     });
 };
 
+const clearBars = () => {
+    labelContainer.innerHTML = "";
+};
+
 const clearThumbnails = () => {
     thumbnailContainer.innerHTML = "";
+};
+
+const clearLog = () => {
+    infoLog.innerHTML = "";
 };
 
 const appendThumbnail = (userId, image, predictionResult) => {
@@ -117,7 +133,7 @@ const updateProbabilityBars = (totalResult) => {
             let classTotal = perClassTotal[i];
             classTotal += imageResult[i].probability;
             perClassTotal[i] = classTotal;
-            const classNormalized = (classTotal / totalCount)  * 100;
+            const classNormalized = (classTotal / totalCount) * 100;
             labelContainer.childNodes[i].innerHTML =
                 `<div class="progress-bar ${i === 0 ? 'bg-success' : 'bg-warning'}" 
 role="progressbar" style="width: ${classNormalized}%" 
@@ -127,19 +143,54 @@ ${imageResult[i].className}: ${classNormalized.toFixed(2)}%</div>`;
     }
 };
 
-const categorizeResult = (result) => {
-    const request = new XMLHttpRequest();
-    const data = JSON.stringify(result);
-    request.open("POST", 'http://localhost:3000/categorize', false);
-    request.setRequestHeader("Content-Type", "application/json");
-    addTokenHeader(request);
-    request.send(data);
-    return request;
+const categorizeResult = (result, userName) => {
+    return new Promise(resolve => {
+        const request = new XMLHttpRequest();
+        const data = JSON.stringify(result);
+        request.open("POST", 'http://localhost:3000/categorize', false);
+        request.setRequestHeader("Content-Type", "application/json");
+        addTokenHeader(request);
+        request.onreadystatechange = () => { // Call a function when the state changes.
+            if (request.readyState === XMLHttpRequest.DONE) {
+                if (request.status === 200) {
+                    const data = JSON.parse(request.response);
+                    const userScore = data.userScore;
+                    appendUserTotalLog(userScore, userName);
+                }
+                resolve();
+            }
+        };
+        request.send(data);
+    });
 };
 
 const addTokenHeader = (request) => {
     const token = document.getElementById("api-token").value;
     request.setRequestHeader("Api-Token", token);
+};
+
+const appendFeedLoadingLog = () => {
+    const logRecord = createLogLine();
+    logRecord.innerHTML = `Loading next candidates... Espera por favor!`;
+    infoLog.appendChild(logRecord);
+};
+
+const appendFeedSizeLog = (candidatesCount) => {
+    const logRecord = createLogLine();
+    logRecord.innerHTML = `Successfully loaded <b>${candidatesCount}</b> candidates with faces!`;
+    infoLog.appendChild(logRecord);
+};
+
+const appendUserTotalLog = (prettyScore, userName) => {
+    const logRecord = createLogLine();
+    logRecord.innerHTML = `<b>${userName}</b> score: ${prettyScore}`;
+    infoLog.appendChild(logRecord);
+};
+
+const createLogLine = () => {
+    const logRecord = document.createElement("samp");
+    logRecord.className = "d-block";
+    return logRecord;
 };
 
 const sleep = (miliseconds) => {
