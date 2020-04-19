@@ -60,6 +60,9 @@ const iterateResults = async (results) => {
         const facesCount = await extractFaces(userId);
         if (facesCount > 0) {
             userList.push({userId: userId, userName: user.name});
+        } else {
+            //If no faces for a given profile, we don't want to see it again
+            await api.rejectProfile(userId);
         }
     }
     return userList;
