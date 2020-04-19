@@ -6,7 +6,7 @@ let apiToken;
 let setToken = (token) => apiToken = token;
 
 let getProfile = async () => await fetch(
-    apiUrl + '/profile',
+    apiUrl + '/v2/profile?include=account,super_likes',
     {headers: {'X-Auth-Token': apiToken}}
 );
 
@@ -29,7 +29,7 @@ let likeProfile = async (userId, superLike) => {
             {method: 'post', headers: {'X-Auth-Token': apiToken}}
         );
         const json = await checkStatus(response);
-        console.log(`${(canSuperLike ? 'Super' : '')} Liked user ${userId}; Result: ${json.status}`)
+        console.info(`${(canSuperLike ? 'Super' : '')} Liked user ${userId}; Result: ${json.status}`)
     } catch (error) {
         console.error(`Error liking user ${userId}; Reason: ${error}`)
     }
@@ -48,7 +48,7 @@ let rejectProfile = async (userId) => {
             {method: 'post', headers: {'X-Auth-Token': apiToken}}
         );
         const json = await checkStatus(response);
-        console.log(`Rejected user ${userId}; Result: ${json.status}`)
+        console.warn(`Rejected user ${userId}; Result: ${json.status}`)
     } catch (error) {
         console.error(`Error rejecting user ${userId}; Reason: ${error}`)
     }
