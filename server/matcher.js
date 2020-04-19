@@ -32,10 +32,13 @@ const getStoredFeed = async () => {
 const processFeed = async (token) => {
     api.setToken(token);
     const results = await fetchProfiles();
-    console.info(`Fetched feed with ${results.length} results`);
-    const limitedResults = limitResults(results);
-    const userList = await iterateResults(limitedResults);
-    return userList;
+    if (results !== undefined) {
+        console.info(`Fetched feed with ${results.length} results`);
+        const limitedResults = limitResults(results);
+        const userList = await iterateResults(limitedResults);
+        return userList;
+    }
+    return [];
 };
 
 const limitResults = (results) => {
