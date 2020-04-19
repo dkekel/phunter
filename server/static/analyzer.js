@@ -5,7 +5,7 @@
 // const URL = "https://teachablemachine.withgoogle.com/models/vLznqld0l/";
 const URL = "https://teachablemachine.withgoogle.com/models/K2JgHmctg/";
 
-let model, labelContainer, maxPredictions;
+let model, labelContainer, thumbnailContainer, maxPredictions;
 
 // Load the image model and setup the webcam
 async function init() {
@@ -22,8 +22,13 @@ async function init() {
     // append elements to the DOM
     labelContainer = document.getElementById("label-container");
     for (let i = 0; i < maxPredictions; i++) { // and class labels
-        labelContainer.appendChild(document.createElement("div"));
+        const childElement = document.createElement("div");
+        childElement.className = "progress";
+        childElement.style.cssText = "height: 20px";
+        labelContainer.appendChild(childElement);
     }
+
+    thumbnailContainer = document.getElementById("user-thumbnails");
 
     let feedSize = await getUsers();
     while (feedSize > 0) {
@@ -59,9 +64,12 @@ const predictImages = async (userId) => {
             const data = JSON.parse(request.response);
             const images = data.images;
             const result = {};
+            clearThumbnails();
             for (let image of images) {
-                document.getElementById("test-img").src = `photos/${userId}/faces/${image}`;
+                appendThumbnail(userId, image);
+                setImageForRecognition(userId, image);
                 result[image] = await predict();
+                updateProbabilityBars(result);
             }
             await categorizeResult({user: userId, result: result});
             resolve();
@@ -70,16 +78,49 @@ const predictImages = async (userId) => {
     });
 };
 
+const clearThumbnails = () => {
+    thumbnailContainer.innerHTML = "";
+};
+
+const appendThumbnail = (userId, image) => {
+    const thumbnailHolder = document.createElement("div");
+    thumbnailHolder.className = "d-inline p-2";
+    thumbnailContainer.appendChild(thumbnailHolder);
+    const thumbnail = document.createElement("img");
+    thumbnail.className = "profile-thumbnail img-thumbnail rounded";
+    thumbnail.src = `photos/${userId}/${image}`;
+    thumbnailHolder.appendChild(thumbnail);
+};
+
+const setImageForRecognition = (userId, image) => {
+    document.getElementById("test-img").src = `photos/${userId}/faces/${image}`;
+};
+
 // run the webcam image through the image model
-const predict = async (imageResult) => {
+const predict = async () => {
     const image = document.getElementById("test-img");
     // predict can take in an image, video or canvas html element
-    imageResult = await model.predict(image);
-    for (let i = 0; i < maxPredictions; i++) {
-        labelContainer.childNodes[i].innerHTML =
-            imageResult[i].className + ": " + imageResult[i].probability.toFixed(2);
+    return await model.predict(image);
+};
+
+const updateProbabilityBars = (totalResult) => {
+    let totalCount = 0;
+    const perClassTotal = [0, 0];
+    for (let key in totalResult) {
+        totalCount++;
+        const imageResult = totalResult[key];
+        for (let i = 0; i < maxPredictions; i++) {
+            let classTotal = perClassTotal[i];
+            classTotal += imageResult[i].probability;
+            perClassTotal[i] = classTotal;
+            const classNormalized = classTotal / totalCount;
+            labelContainer.childNodes[i].innerHTML =
+                `<div class="progress-bar ${i === 0 ? 'bg-success' : 'bg-warning'}" 
+role="progressbar" style="width: ${classNormalized * 100}%" 
+aria-valuenow="${classNormalized}" aria-valuemin="0" aria-valuemax="1">
+${imageResult[i].className}: ${classNormalized.toFixed(2)}</div>`;
+        }
     }
-    return imageResult;
 };
 
 const categorizeResult = (result) => {
