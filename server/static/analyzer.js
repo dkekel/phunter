@@ -67,9 +67,10 @@ const predictImages = async (userId) => {
             const result = {};
             clearThumbnails();
             for (let image of images) {
-                appendThumbnail(userId, image);
                 setImageForRecognition(userId, image);
-                result[image] = await predict();
+                const predictionResult = await predict();
+                result[image] = predictionResult;
+                appendThumbnail(userId, image, predictionResult);
                 updateProbabilityBars(result);
             }
             await categorizeResult({user: userId, result: result});
@@ -83,13 +84,15 @@ const clearThumbnails = () => {
     thumbnailContainer.innerHTML = "";
 };
 
-const appendThumbnail = (userId, image) => {
+const appendThumbnail = (userId, image, predictionResult) => {
+    const prettyProbability = predictionResult[0].probability;
     const thumbnailHolder = document.createElement("div");
     thumbnailHolder.className = "d-inline p-2";
     thumbnailContainer.appendChild(thumbnailHolder);
     const thumbnail = document.createElement("img");
     thumbnail.className = "profile-thumbnail img-thumbnail rounded";
     thumbnail.src = `photos/${userId}/${image}`;
+    thumbnail.title = `Pretty: ${prettyProbability}`;
     thumbnailHolder.appendChild(thumbnail);
 };
 
