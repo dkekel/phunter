@@ -34,6 +34,6 @@ app.get("/images/:userId", async (req, res, next) => {
 app.post("/categorize", async (req, res, next) => {
     const apiToken = req.header('Api-Token');
     const reqBody = req.body;
-    await matcher.categorizeUser(reqBody.result, reqBody.user, apiToken);
-    res.end("ok");
+    const userResult = await matcher.categorizeUser(reqBody.result, reqBody.user, apiToken);
+    res.json({userScore: userResult});
 });

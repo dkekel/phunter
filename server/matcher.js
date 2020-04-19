@@ -90,6 +90,7 @@ const extractFaces = async (userId) => {
 const categorizeUser = async (prediction, user, token) => {
     let prettySum = 0;
     let photosCount = 0;
+    let finalPrediction = 0;
     api.setToken(token);
     for (let key in prediction) {
         photosCount++;
@@ -103,7 +104,7 @@ const categorizeUser = async (prediction, user, token) => {
         }
     }
     if (photosCount > 0) {
-        const finalPrediction = prettySum / photosCount;
+        finalPrediction = prettySum / photosCount;
         if (finalPrediction >= minPretty) {
             console.info(`Final prediction for ${user}: ${finalPrediction}`);
             const superLike = finalPrediction >= superPretty;
@@ -114,6 +115,7 @@ const categorizeUser = async (prediction, user, token) => {
         }
     }
     await fileUtils.removeUserFolder(user);
+    return finalPrediction;
 };
 
 module.exports = {processFeed, getStoredFeed, categorizeUser};
