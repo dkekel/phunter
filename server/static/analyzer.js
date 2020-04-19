@@ -172,24 +172,23 @@ const addTokenHeader = (request) => {
 const appendFeedLoadingLog = () => {
     const logRecord = createLogLine();
     logRecord.innerHTML = `Loading next candidates... Espera por favor!`;
-    infoLog.appendChild(logRecord);
 };
 
 const appendFeedSizeLog = (candidatesCount) => {
     const logRecord = createLogLine();
     logRecord.innerHTML = `Successfully loaded <b>${candidatesCount}</b> candidates with faces!`;
-    infoLog.appendChild(logRecord);
 };
 
 const appendUserTotalLog = (prettyScore, userName) => {
     const logRecord = createLogLine();
     logRecord.innerHTML = `<b>${userName}</b> score: ${prettyScore}`;
-    infoLog.appendChild(logRecord);
 };
 
 const createLogLine = () => {
     const logRecord = document.createElement("samp");
     logRecord.className = "d-block";
+    infoLog.appendChild(logRecord);
+    logRecord.scrollIntoView();
     return logRecord;
 };
 
