@@ -1,12 +1,11 @@
 require("@tensorflow/tfjs-node");
-const faceapi = require("face-api.js");
+const faceApi = require("face-api.js");
 const canvas = require("canvas");
 const gm = require("gm");
 const fs = require("fs");
-const fileUtils = require("../utils/fileutils");
 
 const {Canvas, Image, ImageData} = canvas;
-faceapi.env.monkeyPatch({Canvas, Image, ImageData});
+faceApi.env.monkeyPatch({Canvas, Image, ImageData});
 
 const MODEL_URL = `${__dirname}/facemodel`;
 
@@ -14,6 +13,7 @@ const recognizeFaces = async (folder) => {
     await loadModels();
     const dirScan = await fs.readdirSync(folder);
     let facesCount = 0;
+    console.info(`Detecting faces for ${folder}`);
     for (let file of dirScan) {
         let filePath = `${folder}/${file}`;
         if (!fs.lstatSync(filePath).isDirectory()) {
@@ -28,9 +28,9 @@ const recognizeFaces = async (folder) => {
 
 const loadModels = async () => {
     try {
-        await faceapi.nets.ssdMobilenetv1.loadFromDisk(MODEL_URL);
-        await faceapi.nets.faceLandmark68Net.loadFromDisk(MODEL_URL);
-        await faceapi.nets.faceRecognitionNet.loadFromDisk(MODEL_URL);
+        await faceApi.nets.ssdMobilenetv1.loadFromDisk(MODEL_URL);
+        await faceApi.nets.faceLandmark68Net.loadFromDisk(MODEL_URL);
+        await faceApi.nets.faceRecognitionNet.loadFromDisk(MODEL_URL);
     } catch (e) {
         console.error(e);
     }
@@ -64,7 +64,7 @@ const cropImage = async (folder, file, context) => {
             .crop(context._width, context._height, context._x, context._y)
             .write(destinationPath, (error) => {
                 if (error) {
-                    console.log(`Failed to crop ${sourcePath}. Reason: ${error}`);
+                    console.error(`Failed to crop ${sourcePath}. Reason: ${error}`);
                     reject(error);
                 } else {
                     resolve();

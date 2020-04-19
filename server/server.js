@@ -11,7 +11,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.listen(3000, () => {
-    console.log("Server running on port 3000");
+    console.info("Server running on port 3000");
 });
 
 app.get("/", (req, res, next) => {
@@ -27,7 +27,6 @@ app.get("/feed", async (req, res, next) => {
 app.get("/images/:userId", async (req, res, next) => {
     const userId = req.params.userId;
     const images = await fileUtils.getImageURLs(userId);
-    console.log("Request recieved");
     res.json({images: images});
 });
 

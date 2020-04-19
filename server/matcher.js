@@ -1,6 +1,6 @@
 const api = require("./api/tinder");
 const utils = require("./utils/utils");
-const faseApi = require("./recognition/faceapi");
+const faceApi = require("./recognition/faceapi");
 const fs = require("fs");
 const fileUtils = require("./utils/fileutils");
 
@@ -13,7 +13,7 @@ const maxResults = 15;
 const matcher = async () => {
     let results = await fetchProfiles();
     while (results !== undefined && results.length > 0) {
-        console.log(`Fetched feed with ${results.length} results`);
+        console.info(`Fetched feed with ${results.length} results`);
         await iterateResults(results);
         results = await fetchProfiles();
     }
@@ -33,7 +33,7 @@ const getStoredFeed = async () => {
 const processFeed = async () => {
     api.setToken(token);
     const results = await fetchProfiles();
-    console.log(`Fetched feed with ${results.length} results`);
+    console.info(`Fetched feed with ${results.length} results`);
     const limitedResults = limitResults(results);
     const userList = await iterateResults(limitedResults);
     return userList;
@@ -74,12 +74,12 @@ const parsePhotos = async (user) => {
         await utils.downloadFile(photoUrl, userId)
             .catch(error => `Error downloading photo for user ${userId}; Reason: ${error}`);
     }
-    console.log(`Downloaded ${photos.length} photos for user ${userId}`);
+    console.info(`Downloaded ${photos.length} photos for user ${userId}`);
 };
 
 const extractFaces = async (userId) => {
     const userPhotos = `${photosPath}/${userId}`;
-    return await faseApi.recognizeFaces(userPhotos);
+    return await faceApi.recognizeFaces(userPhotos);
 };
 
 const categorizeUser = async (prediction, user) => {
@@ -98,8 +98,8 @@ const categorizeUser = async (prediction, user) => {
     }
     if (photosCount > 0) {
         const finalPrediction = prettySum / photosCount;
-        console.log(`Final prediction for ${user}: ${finalPrediction}`);
         if (finalPrediction >= minPretty) {
+            console.info(`Final prediction for ${user}: ${finalPrediction}`);
             const superLike = finalPrediction >= superPretty;
             await likeUser(user, superLike);
         } else {
@@ -117,6 +117,5 @@ const rejectUser = async (userId) => {
     api.setToken(token);
     await api.rejectProfile(userId);
 };
-
 
 module.exports = {processFeed, getStoredFeed, categorizeUser};
