@@ -37,17 +37,20 @@ const loadModels = async () => {
 };
 
 const processFile = async (folder, file) => {
-    console.log(`Testing ${file}`);
-    const photo = await canvas.loadImage(`${folder}/${file}`);
-    const faceDescriptors = await faceapi.detectSingleFace(photo);
     let faceFound = false;
-    if (faceDescriptors !== undefined) {
-        const faceScore = faceDescriptors._score;
-        console.log(`Face score: ${faceScore}`);
-        if (faceScore > 0.7) {
-            await cropImage(folder, file, faceDescriptors._box);
-            faceFound = true;
+    try {
+        const photo = await canvas.loadImage(`${folder}/${file}`);
+        const faceDescriptors = await faceApi.detectSingleFace(photo);
+        if (faceDescriptors !== undefined) {
+            const faceScore = faceDescriptors._score;
+            if (faceScore > 0.7) {
+                await cropImage(folder, file, faceDescriptors._box)
+                    .catch(() => console.error("Face was not cropped"));
+                faceFound = true;
+            }
         }
+    } catch (e) {
+        console.error(`Skipping ${folder}/${file} due to recognition error: ${e}`);
     }
     return faceFound;
 };
