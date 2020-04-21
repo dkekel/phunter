@@ -32,6 +32,7 @@ const loadModels = async () => {
         await faceApi.nets.ssdMobilenetv1.loadFromDisk(MODEL_URL);
         await faceApi.nets.faceLandmark68Net.loadFromDisk(MODEL_URL);
         await faceApi.nets.faceRecognitionNet.loadFromDisk(MODEL_URL);
+        await faceApi.nets.ageGenderNet.loadFromDisk(MODEL_URL);
     } catch (e) {
         console.error(e);
     }
@@ -41,11 +42,12 @@ const processFile = async (folder, file) => {
     let faceFound = false;
     try {
         const photo = await canvas.loadImage(`${folder}/${file}`);
-        const faceDescriptors = await faceApi.detectSingleFace(photo);
+        const faceDescriptors = await faceApi.detectSingleFace(photo).withAgeAndGender();
         if (faceDescriptors !== undefined) {
-            const faceScore = faceDescriptors._score;
-            const faceBox = faceDescriptors._box;
-            if (faceScore > 0.7 && isMinFaceSize(faceBox)) {
+            const faceScore = faceDescriptors.detection.score;
+            const faceBox = faceDescriptors.detection.box;
+            const gender = faceDescriptors.gender;
+            if (faceScore > 0.7 && gender === 'female' && isMinFaceSize(faceBox)) {
                 await cropImage(folder, file, faceBox)
                     .catch(() => console.error("Face was not cropped"));
                 faceFound = true;
