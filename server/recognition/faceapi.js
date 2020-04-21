@@ -8,6 +8,7 @@ const {Canvas, Image, ImageData} = canvas;
 faceApi.env.monkeyPatch({Canvas, Image, ImageData});
 
 const MODEL_URL = `${__dirname}/facemodel`;
+const minFaceSize = 150;
 
 const recognizeFaces = async (folder) => {
     await loadModels();
@@ -43,8 +44,9 @@ const processFile = async (folder, file) => {
         const faceDescriptors = await faceApi.detectSingleFace(photo);
         if (faceDescriptors !== undefined) {
             const faceScore = faceDescriptors._score;
-            if (faceScore > 0.7) {
-                await cropImage(folder, file, faceDescriptors._box)
+            const faceBox = faceDescriptors._box;
+            if (faceScore > 0.7 && isMinFaceSize(faceBox)) {
+                await cropImage(folder, file, faceBox)
                     .catch(() => console.error("Face was not cropped"));
                 faceFound = true;
             }
@@ -53,6 +55,10 @@ const processFile = async (folder, file) => {
         console.error(`Skipping ${folder}/${file} due to recognition error: ${e}`);
     }
     return faceFound;
+};
+
+const isMinFaceSize= (faceBox) => {
+    return faceBox._width >= minFaceSize || faceBox._height >= minFaceSize;
 };
 
 const cropImage = async (folder, file, context) => {
