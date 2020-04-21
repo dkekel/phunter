@@ -3,7 +3,8 @@
 
 // the link to your model provided by Teachable Machine export panel
 // const URL = "https://teachablemachine.withgoogle.com/models/vLznqld0l/";
-const URL = "https://teachablemachine.withgoogle.com/models/K2JgHmctg/";
+// const URL = "https://teachablemachine.withgoogle.com/models/K2JgHmctg/";
+const URL = "https://teachablemachine.withgoogle.com/models/8mc6xcvVm/";
 
 let model, labelContainer, thumbnailContainer, infoLog, maxPredictions;
 
