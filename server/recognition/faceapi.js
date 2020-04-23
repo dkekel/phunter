@@ -1,8 +1,8 @@
 require("@tensorflow/tfjs-node");
 const faceApi = require("face-api.js");
 const canvas = require("canvas");
-const gm = require("gm");
 const fs = require("fs");
+const Clipper = require('image-clipper');
 
 const {Canvas, Image, ImageData} = canvas;
 faceApi.env.monkeyPatch({Canvas, Image, ImageData});
@@ -53,7 +53,7 @@ const processFile = async (folder, file) => {
             const gender = faceDescriptors.gender;
             if (faceScore > 0.7 && gender === 'female' && isMinFaceSize(faceBox)) {
                 await cropImage(folder, file, faceBox)
-                    .catch(() => console.error("Face was not cropped"));
+                    .catch((error) => console.error(`Face was not cropped ${error}`));
                 faceFound = true;
             }
         }
@@ -63,7 +63,7 @@ const processFile = async (folder, file) => {
     return faceFound;
 };
 
-const isMinFaceSize= (faceBox) => {
+const isMinFaceSize = (faceBox) => {
     return faceBox._width >= minFaceSize || faceBox._height >= minFaceSize;
 };
 
@@ -71,17 +71,20 @@ const cropImage = async (folder, file, context) => {
     const sourcePath = `${folder}/${file}`;
     const destinationPath = `${folder}/faces/${file}`;
     await createFolderIfMissing(folder, "faces");
+    const clipper = Clipper({canvas: canvas});
     return new Promise(function (resolve, reject) {
-        gm(sourcePath)
-            .crop(context._width, context._height, context._x, context._y)
-            .write(destinationPath, (error) => {
-                if (error) {
-                    console.error(`Failed to crop ${sourcePath}. Reason: ${error}`);
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
+        clipper.image(sourcePath, function () {
+            this.crop(context._x, context._y, context._width, context._height)
+                .quality(90)
+                .toFile(destinationPath, (error) => {
+                    if (error) {
+                        console.error(`Failed to crop ${sourcePath}. Reason: ${error}`);
+                        reject(error);
+                    } else {
+                        resolve();
+                    }
+                });
+        });
     });
 };
 
