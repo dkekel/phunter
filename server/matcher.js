@@ -7,7 +7,7 @@ const fileUtils = require("./utils/fileutils");
 const photosPath = 'server/static/photos';
 const minPretty = 0.4;
 const superPretty = 0.8;
-const maxResults = 10;
+const maxResults = 5;
 
 const matcher = async () => {
     let results = await fetchProfiles();
@@ -35,8 +35,7 @@ const processFeed = async (token) => {
     if (results !== undefined) {
         console.info(`Fetched feed with ${results.length} results`);
         const limitedResults = limitResults(results);
-        const userList = await iterateResults(limitedResults);
-        return userList;
+        return await iterateResults(limitedResults);
     }
     return [];
 };
@@ -91,12 +90,18 @@ const categorizeUser = async (prediction, user, token) => {
     let prettySum = 0;
     let photosCount = 0;
     let finalPrediction = 0;
+    let maxPrettyScore = 0;
+    let prettyPhotoId;
     api.setToken(token);
     for (let key in prediction) {
         photosCount++;
         const photoResult = prediction[key];
         const prettyProbability = photoResult[0].probability;
         if (prettyProbability >= minPretty) {
+            if (prettyProbability > maxPrettyScore) {
+                prettyPhotoId = key;
+                maxPrettyScore = prettyProbability;
+            }
             await fileUtils.moveFile(key, user, "pretty");
             prettySum += prettyProbability;
         } else {
@@ -106,9 +111,8 @@ const categorizeUser = async (prediction, user, token) => {
     if (photosCount > 0) {
         finalPrediction = prettySum / photosCount;
         if (finalPrediction >= minPretty) {
-            console.info(`Final prediction for ${user}: ${finalPrediction}`);
             const superLike = finalPrediction >= superPretty;
-            await fileUtils.moveSelectedPhotos(user, "liked");
+            await fileUtils.moveSelectedPhotos(user, prettyPhotoId, "liked");
             await api.likeProfile(user, superLike);
         } else {
             await api.rejectProfile(user);

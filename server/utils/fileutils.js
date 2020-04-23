@@ -9,15 +9,10 @@ const moveFile = async (fileName, userId, destinationFolder) => {
     await fs.renameSync(`${userPhotoPath}/faces/${fileName}`, `${photosPath}/${destinationFolder}/${fileName}`);
 };
 
-const moveSelectedPhotos = async (userId, destinationFolder) => {
+const moveSelectedPhotos = async (userId, photoId, destinationFolder) => {
     const userPhotoPath = `${photosPath}/${userId}`;
     await createFolderIfMissing(photosPath, destinationFolder);
-    const dirScan = await fs.readdirSync(userPhotoPath);
-    for (let file of dirScan) {
-        if (!fs.lstatSync(`${userPhotoPath}/${file}`).isDirectory()) {
-            await fs.renameSync(`${userPhotoPath}/${file}`, `${photosPath}/${destinationFolder}/${file}`);
-        }
-    }
+    await fs.renameSync(`${userPhotoPath}/${photoId}`, `${photosPath}/${destinationFolder}/${photoId}`);
 };
 
 const removeUserFolder = async (userId) => {
