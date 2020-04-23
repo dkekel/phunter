@@ -9,26 +9,17 @@ faceApi.env.monkeyPatch({Canvas, Image, ImageData});
 
 const MODEL_URL = `${__dirname}/facemodel`;
 const minFaceSize = 150;
+const minFaceScore = 0.65;
 
-const recognizeFaces = async (folder) => {
-    await loadModels();
-    let facesCount = 0;
-    try {
-        const dirScan = await fs.readdirSync(folder);
-        console.info(`Detecting faces for ${folder}`);
-        for (let file of dirScan) {
-            let filePath = `${folder}/${file}`;
-            if (!fs.lstatSync(filePath).isDirectory()) {
-                const faceFound = await processFile(folder, file);
-                if (faceFound) {
-                    facesCount++;
-                }
-            }
+const recognizeFaces = (photoFolder, photoFiles) => {
+    const dirPromises = photoFiles.map(file => {
+        let filePath = `${photoFolder}/${file}`;
+        if (!fs.lstatSync(filePath).isDirectory()) {
+            return processFile(photoFolder, file);
         }
-    } catch (e) {
-        console.error(`Failed to recognize faces for ${folder} due to ${e}`)
-    }
-    return facesCount;
+        return new Promise(resolve => resolve());
+    });
+    return Promise.all(dirPromises);
 };
 
 const loadModels = async () => {
@@ -42,25 +33,28 @@ const loadModels = async () => {
     }
 };
 
-const processFile = async (folder, file) => {
-    let faceFound = false;
-    try {
-        const photo = await canvas.loadImage(`${folder}/${file}`);
-        const faceDescriptors = await faceApi.detectSingleFace(photo).withAgeAndGender();
-        if (faceDescriptors !== undefined) {
-            const faceScore = faceDescriptors.detection.score;
-            const faceBox = faceDescriptors.detection.box;
-            const gender = faceDescriptors.gender;
-            if (faceScore > 0.7 && gender === 'female' && isMinFaceSize(faceBox)) {
-                await cropImage(folder, file, faceBox)
-                    .catch((error) => console.error(`Face was not cropped ${error}`));
-                faceFound = true;
+const processFile = (folder, file) => {
+    return new Promise(async (resolve, reject) => {
+        let faceFound = false;
+        try {
+            const photo = await canvas.loadImage(`${folder}/${file}`);
+            const faceDescriptors = await faceApi.detectSingleFace(photo).withAgeAndGender();
+            if (faceDescriptors !== undefined) {
+                const faceScore = faceDescriptors.detection.score;
+                const faceBox = faceDescriptors.detection.box;
+                // const gender = faceDescriptors.gender;
+                if (faceScore > minFaceScore && isMinFaceSize(faceBox)) {
+                    await cropImage(folder, file, faceBox)
+                        .catch((error) => console.error(`Face was not cropped ${error}`));
+                    faceFound = true;
+                }
             }
+            resolve(faceFound);
+        } catch (e) {
+            console.error(`Skipping ${folder}/${file} due to recognition error: ${e}`);
+            reject();
         }
-    } catch (e) {
-        console.error(`Skipping ${folder}/${file} due to recognition error: ${e}`);
-    }
-    return faceFound;
+    });
 };
 
 const isMinFaceSize = (faceBox) => {
@@ -95,4 +89,4 @@ const createFolderIfMissing = async (path, newFolder) => {
     }
 };
 
-module.exports = {recognizeFaces};
+module.exports = {loadModels, recognizeFaces};

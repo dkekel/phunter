@@ -82,8 +82,18 @@ const parsePhotos = async (user) => {
 };
 
 const extractFaces = async (userId) => {
-    const userPhotos = `${photosPath}/${userId}`;
-    return await faceApi.recognizeFaces(userPhotos);
+    const photosFolder = `${photosPath}/${userId}`;
+    const photoFiles = await fs.readdirSync(photosFolder);
+    console.info(`Detecting faces for ${photosFolder}`);
+    const recognitionResult = await faceApi.recognizeFaces(photosFolder, photoFiles);
+    let facesCount = 0;
+    for (let filePromise of recognitionResult) {
+        const faceFound = await filePromise;
+        if (faceFound) {
+            facesCount++;
+        }
+    }
+    return facesCount;
 };
 
 const categorizeUser = async (prediction, user, token) => {
@@ -122,4 +132,8 @@ const categorizeUser = async (prediction, user, token) => {
     return finalPrediction;
 };
 
-module.exports = {processFeed, getStoredFeed, categorizeUser};
+const loadFaceModels = async () => {
+    await faceApi.loadModels();
+};
+
+module.exports = {loadFaceModels, processFeed, getStoredFeed, categorizeUser};

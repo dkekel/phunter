@@ -10,7 +10,8 @@ app.use('/photos', express.static(path.join(__dirname, 'static/photos')));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-app.listen(3000, () => {
+app.listen(3000, async () => {
+    await matcher.loadFaceModels();
     console.info("Server running on port 3000");
 });
 
