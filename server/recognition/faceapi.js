@@ -12,17 +12,21 @@ const minFaceSize = 150;
 
 const recognizeFaces = async (folder) => {
     await loadModels();
-    const dirScan = await fs.readdirSync(folder);
     let facesCount = 0;
-    console.info(`Detecting faces for ${folder}`);
-    for (let file of dirScan) {
-        let filePath = `${folder}/${file}`;
-        if (!fs.lstatSync(filePath).isDirectory()) {
-            const faceFound = await processFile(folder, file);
-            if (faceFound) {
-                facesCount++;
+    try {
+        const dirScan = await fs.readdirSync(folder);
+        console.info(`Detecting faces for ${folder}`);
+        for (let file of dirScan) {
+            let filePath = `${folder}/${file}`;
+            if (!fs.lstatSync(filePath).isDirectory()) {
+                const faceFound = await processFile(folder, file);
+                if (faceFound) {
+                    facesCount++;
+                }
             }
         }
+    } catch (e) {
+        console.error(`Failed to recognize faces for ${folder} due to ${e}`)
     }
     return facesCount;
 };
