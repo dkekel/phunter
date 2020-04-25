@@ -85,7 +85,8 @@ const extractFaces = async (userId) => {
     const photosFolder = `${photosPath}/${userId}`;
     const photoFiles = await fs.readdirSync(photosFolder);
     console.info(`Detecting faces for ${photosFolder}`);
-    const recognitionResult = await faceApi.recognizeFaces(photosFolder, photoFiles);
+    const recognitionResult = await faceApi.recognizeFaces(photosFolder, photoFiles)
+        .catch((error) => console.log(`Failed to extract face ${error}`));
     let facesCount = 0;
     for (let filePromise of recognitionResult) {
         const faceFound = await filePromise;
