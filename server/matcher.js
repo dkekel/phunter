@@ -77,7 +77,9 @@ const iterateResults = async (results) => {
             userList.push({userId: userId, userName: user.name, city: city});
         } else {
             //If no faces for a given profile, we don't want to see it again
-            await api.rejectProfile(userId);
+            const reason = facesCount === 0 ? `profile has ${facesCount} faces` :
+                distance < maxDistance ? `profile locations is ${distance}` : 'unknown';
+            await api.rejectProfile(userId, reason);
         }
     }
     return userList;
@@ -144,7 +146,8 @@ const categorizeUser = async (prediction, user, token) => {
             await fileUtils.moveSelectedPhotos(user, prettyPhotoId, "liked");
             await api.likeProfile(user, superLike);
         } else {
-            await api.rejectProfile(user);
+            const reason = `final prediction ${finalPrediction}`;
+            await api.rejectProfile(user, reason);
         }
     }
     return finalPrediction;

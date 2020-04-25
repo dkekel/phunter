@@ -41,14 +41,14 @@ const checkSuperLikes = async () => {
     return profileJson.data.super_likes.remaining > 0;
 };
 
-let rejectProfile = async (userId) => {
+let rejectProfile = async (userId, reason) => {
     try {
         const response = await fetch(
             apiUrl + '/pass/' + userId,
             {method: 'post', headers: {'X-Auth-Token': apiToken}}
         );
         const json = await checkStatus(response);
-        console.warn(`Rejected user ${userId}; Result: ${json.status}`)
+        console.warn(`Rejected user ${userId}. Reason: ${reason}. Result: ${json.status}`)
     } catch (error) {
         console.error(`Error rejecting user ${userId}; Reason: ${error}`)
     }
