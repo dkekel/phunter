@@ -174,12 +174,12 @@ const addTokenHeader = (request) => {
 
 const appendFeedLoadingLog = () => {
     const logRecord = createLogLine();
-    logRecord.innerHTML = `Loading next candidates... Espera por favor!`;
+    logRecord.innerHTML += `Loading next candidates... Espera por favor!`;
 };
 
 const appendFeedSizeLog = (candidatesCount) => {
     const logRecord = createLogLine();
-    logRecord.innerHTML = `Successfully loaded <b>${candidatesCount}</b> candidates with faces!`;
+    logRecord.innerHTML += `Successfully loaded <b>${candidatesCount}</b> candidates with faces!`;
 };
 
 const appendUserTotalLog = (prettyScore, userName) => {
@@ -192,12 +192,13 @@ const appendUserTotalLog = (prettyScore, userName) => {
             break;
         }
     }
-    logRecord.innerHTML = `<b>${userName}</b> score: ${fibonacciScore}`;
+    logRecord.innerHTML += `<b>${userName}</b> score: ${fibonacciScore}`;
 };
 
 const createLogLine = () => {
     const logRecord = document.createElement("samp");
     logRecord.className = "d-block";
+    logRecord.innerHTML = `${new Date().toLocaleString()} `;
     infoLog.appendChild(logRecord);
     logRecord.scrollIntoView();
     return logRecord;

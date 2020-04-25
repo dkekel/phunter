@@ -33,7 +33,7 @@ const processFeed = async (token) => {
     api.setToken(token);
     const results = await fetchProfiles();
     if (results !== undefined) {
-        console.info(`Fetched feed with ${results.length} results`);
+        console.info(`${new Date().toLocaleString()} Fetched feed with ${results.length} results`);
         const limitedResults = limitResults(results);
         return await iterateResults(limitedResults);
     }
