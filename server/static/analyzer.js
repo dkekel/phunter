@@ -54,7 +54,7 @@ const getUsers = async () => {
             appendFeedSizeLog(users.length);
             for (let user of users) {
                 await predictImages(user);
-                sleep(1500);
+                sleep(500);
             }
             resolve(users.length);
         };
