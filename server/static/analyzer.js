@@ -68,6 +68,7 @@ const getUsers = async () => {
 const predictImages = async (user) => {
     const userId = user.userId;
     const userName = user.userName;
+    const userCity = user.city;
     return new Promise((resolve, reject) => {
         const request = new XMLHttpRequest();
         request.open('GET', `http://localhost:3000/images/${userId}`, false);
@@ -84,7 +85,7 @@ const predictImages = async (user) => {
                 appendThumbnail(userId, image, predictionResult);
                 updateProbabilityBars(result);
             }
-            await categorizeResult({user: userId, result: result}, userName);
+            await categorizeResult({user: userId, result: result}, userName, userCity);
             resolve();
         };
         request.send();
@@ -146,7 +147,7 @@ ${imageResult[i].className}: ${classNormalized.toFixed(2)}%</div>`;
     }
 };
 
-const categorizeResult = (result, userName) => {
+const categorizeResult = (result, userName, userCity) => {
     return new Promise(resolve => {
         const request = new XMLHttpRequest();
         const data = JSON.stringify(result);
@@ -158,7 +159,7 @@ const categorizeResult = (result, userName) => {
                 if (request.status === 200) {
                     const data = JSON.parse(request.response);
                     const userScore = data.userScore;
-                    appendUserTotalLog(userScore, userName);
+                    appendUserTotalLog(userScore, userName, userCity);
                 }
                 resolve();
             }
@@ -182,7 +183,7 @@ const appendFeedSizeLog = (candidatesCount) => {
     logRecord.innerHTML += `Successfully loaded <b>${candidatesCount}</b> candidates with faces!`;
 };
 
-const appendUserTotalLog = (prettyScore, userName) => {
+const appendUserTotalLog = (prettyScore, userName, userCity) => {
     const logRecord = createLogLine();
     const roundedScore = parseFloat(prettyScore.toFixed(1));
     let fibonacciScore;
@@ -192,7 +193,11 @@ const appendUserTotalLog = (prettyScore, userName) => {
             break;
         }
     }
-    logRecord.innerHTML += `<b>${userName}</b> score: ${fibonacciScore}`;
+    let logString = `<b>${userName}</b> `;
+    if (userCity !== undefined) {
+        logString += `<b>(${userCity})</b> `;
+    }
+    logRecord.innerHTML += logString + `score: ${fibonacciScore}`;
 };
 
 const createLogLine = () => {
