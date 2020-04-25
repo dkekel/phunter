@@ -10,6 +10,11 @@ let model, labelContainer, thumbnailContainer, infoLog, maxPredictions;
 
 const fibonacciMapping = {"0": 0, "1": 0.1, "2": 0.2, "3": 0.3, "5": 0.6, "8": 0.8, "PARFAIT": 1};
 
+const maxRetry = 10;
+const retrySleep = 60000;
+let retryIncrement = maxRetry;
+let retrySleepIncrement = retrySleep;
+
 // Load the image model and setup the webcam
 async function init() {
     const modelURL = URL + "model.json";
@@ -38,8 +43,13 @@ async function init() {
     clearLog();
 
     let feedSize = await getUsers();
-    while (feedSize > 0) {
+    while (feedSize > 0 || retryIncrement > 0) {
         feedSize = await getUsers();
+        if (feedSize === 0) {
+            waitForNewFeed();
+        } else {
+            resetRetryStatus();
+        }
     }
 }
 
@@ -63,6 +73,18 @@ const getUsers = async () => {
         appendFeedLoadingLog();
         request.send();
     });
+};
+
+const waitForNewFeed = () => {
+    retryIncrement--;
+    appendFeedWaitLog();
+    sleep(retrySleepIncrement);
+    retrySleepIncrement = retrySleepIncrement * 3;
+};
+
+const resetRetryStatus = () => {
+    retryIncrement = maxRetry;
+    retrySleepIncrement = retrySleep;
 };
 
 const predictImages = async (user) => {
@@ -181,6 +203,11 @@ const appendFeedLoadingLog = () => {
 const appendFeedSizeLog = (candidatesCount) => {
     const logRecord = createLogLine();
     logRecord.innerHTML += `Successfully loaded <b>${candidatesCount}</b> candidates with faces!`;
+};
+
+const appendFeedWaitLog = () => {
+    const logRecord = createLogLine();
+    logRecord.innerHTML += `Waiting ${retrySleepIncrement / 1000} second for the feed.`;
 };
 
 const appendUserTotalLog = (prettyScore, userName, userCity) => {
