@@ -5,6 +5,7 @@ const fs = require("fs");
 const fileUtils = require("./utils/fileutils");
 
 const photosPath = 'server/static/photos';
+const maxDistance = 300;
 const minPretty = 0.4;
 const superPretty = 0.8;
 const maxResults = 5;
@@ -56,12 +57,14 @@ const fetchProfiles = async () => {
 const iterateResults = async (results) => {
     const userList = [];
     for (let userObject of results) {
-        let user = userObject.user;
-        let userId = user._id;
+        const user = userObject.user;
+        const userId = user._id;
+        const city = user.city !== undefined ? user.city.name : undefined;
+        const distance = userObject.distance_mi;
         await parsePhotos(user);
         const facesCount = await extractFaces(userId);
-        if (facesCount > 0) {
-            userList.push({userId: userId, userName: user.name});
+        if (facesCount > 0 && distance < maxDistance) {
+            userList.push({userId: userId, userName: user.name, city: city});
         } else {
             //If no faces for a given profile, we don't want to see it again
             await api.rejectProfile(userId);
