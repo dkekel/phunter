@@ -36,9 +36,19 @@ const processFeed = async (token) => {
     if (results !== undefined) {
         console.info(`${new Date().toLocaleString()} Fetched feed with ${results.length} results`);
         const limitedResults = limitResults(results);
+        await cleanTempData();
         return await iterateResults(limitedResults);
     }
     return [];
+};
+
+const cleanTempData = async () => {
+    const tempFolders = await fs.readdirSync(photosPath);
+    for (let folder of tempFolders) {
+        if (folder !== 'liked' && folder !== 'pretty' && folder !== 'notpretty') {
+            await fileUtils.removeFolder(folder);
+        }
+    }
 };
 
 const limitResults = (results) => {
@@ -136,7 +146,6 @@ const categorizeUser = async (prediction, user, token) => {
             await api.rejectProfile(user);
         }
     }
-    await fileUtils.removeUserFolder(user);
     return finalPrediction;
 };
 

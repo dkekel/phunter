@@ -15,8 +15,8 @@ const moveSelectedPhotos = async (userId, photoId, destinationFolder) => {
     await fs.renameSync(`${userPhotoPath}/${photoId}`, `${photosPath}/${destinationFolder}/${photoId}`);
 };
 
-const removeUserFolder = async (userId) => {
-    await rimraf.sync(`${photosPath}/${userId}`)
+const removeFolder = async (folder) => {
+    await rimraf.sync(`${photosPath}/${folder}`)
 };
 
 const createFolderIfMissing = async (path, newFolder) => {
@@ -38,4 +38,4 @@ const getImageURLs = async (userId) => {
     return images;
 };
 
-module.exports = {getImageURLs, moveFile, moveSelectedPhotos, removeUserFolder};
+module.exports = {getImageURLs, moveFile, moveSelectedPhotos, removeFolder};
