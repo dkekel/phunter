@@ -77,8 +77,7 @@ const iterateResults = async (results) => {
             userList.push({userId: userId, userName: user.name, city: city});
         } else {
             //If no faces for a given profile, we don't want to see it again
-            const reason = facesCount === 0 ? `profile has ${facesCount} faces` :
-                distance < maxDistance ? `profile locations is ${distance}` : 'unknown';
+            const reason = `${facesCount} faces; distance ${distance}`;
             await api.rejectProfile(userId, reason);
         }
     }
