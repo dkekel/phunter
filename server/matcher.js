@@ -8,7 +8,7 @@ const photosPath = 'server/static/photos';
 const maxDistance = 300;
 const minPretty = 0.4;
 const superPretty = 0.8;
-const maxResults = 5;
+const maxResults = 10;
 
 const matcher = async () => {
     let results = await fetchProfiles();
