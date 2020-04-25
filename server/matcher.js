@@ -91,11 +91,15 @@ const extractFaces = async (userId) => {
     const recognitionResult = await faceApi.recognizeFaces(photosFolder, photoFiles)
         .catch((error) => console.log(`Failed to extract face ${error}`));
     let facesCount = 0;
-    for (let filePromise of recognitionResult) {
-        const faceFound = await filePromise;
-        if (faceFound) {
-            facesCount++;
+    try {
+        for (let filePromise of recognitionResult) {
+            const faceFound = await filePromise;
+            if (faceFound) {
+                facesCount++;
+            }
         }
+    } catch (e) {
+        console.error(`No faces detected for ${userId}`);
     }
     return facesCount;
 };
