@@ -137,7 +137,8 @@ const categorizeUser = async (prediction, user, token) => {
         }
     }
     if (photosCount > 0) {
-        finalPrediction = prettySum / photosCount;
+        //Round up to 2 decimal places
+        finalPrediction = Math.ceil(prettySum / photosCount * 100) / 100;
         if (finalPrediction >= minPretty) {
             const superLike = finalPrediction >= superPretty;
             await fileUtils.moveSelectedPhotos(user, prettyPhotoId, "liked");
