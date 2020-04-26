@@ -8,8 +8,8 @@
     "tinder": "node server/api/tinder.js"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Dmitry Kekelidze <dkekel@gmail.com>",
+  "license": "GPL-3.0-or-later",
   "dependencies": {
     "@teachablemachine/image": "^0.8.4",
     "@tensorflow-models/knn-classifier": "^1.2.2",
