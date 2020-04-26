@@ -33,13 +33,24 @@ const getStoredFeed = async () => {
 const processFeed = async (token) => {
     api.setToken(token);
     const results = await fetchProfiles();
+    const feedProfiles = [];
     if (results !== undefined) {
         console.info(`${new Date().toLocaleString()} Fetched feed with ${results.length} results`);
         const limitedResults = limitResults(results);
         await cleanTempData();
-        return await iterateResults(limitedResults);
+        const iterationResults = await iterateResults(limitedResults);
+        try {
+            for (let userResult of iterationResults) {
+                //If no faces were identified, the promise returns undefined
+                if (userResult !== undefined) {
+                    feedProfiles.push(userResult);
+                }
+            }
+        } catch (e) {
+            console.error(`Failed to process feed results. Reason: ${e}`);
+        }
     }
-    return [];
+    return feedProfiles;
 };
 
 const cleanTempData = async () => {
@@ -66,23 +77,28 @@ const fetchProfiles = async () => {
 };
 
 const iterateResults = async (results) => {
-    const userList = [];
+    const userIterationPromises = [];
     for (let userObject of results) {
-        const user = userObject.user;
-        const userId = user._id;
-        const city = user.city !== undefined ? user.city.name : undefined;
-        const distance = userObject.distance_mi;
-        await parsePhotos(user);
-        const facesCount = await extractFaces(userId);
-        if (facesCount > 0 && distance < maxDistance) {
-            userList.push({userId: userId, userName: user.name, city: city});
-        } else {
-            //If no faces for a given profile, we don't want to see it again
-            const reason = `${facesCount} faces; distance ${distance}`;
-            await api.rejectProfile(userId, reason);
-        }
+        const userProcessPromise = new Promise(async resolve => {
+            const user = userObject.user;
+            const userId = user._id;
+            const city = user.city !== undefined ? user.city.name : undefined;
+            const distance = userObject.distance_mi;
+            await parsePhotos(user);
+            const facesCount = await extractFaces(userId);
+            if (facesCount > 0 && distance < maxDistance) {
+                const userProcessResult = {userId: userId, userName: user.name, city: city};
+                resolve(userProcessResult);
+            } else {
+                //If no faces for a given profile, we don't want to see it again
+                const reason = `${facesCount} faces; distance ${distance}`;
+                await api.rejectProfile(userId, reason);
+                resolve(undefined);
+            }
+        });
+        userIterationPromises.push(userProcessPromise);
     }
-    return userList;
+    return Promise.all(userIterationPromises);
 };
 
 const parsePhotos = async (user) => {
