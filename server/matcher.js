@@ -46,7 +46,8 @@ const cleanTempData = async () => {
     const tempFolders = await fs.readdirSync(photosPath);
     for (let folder of tempFolders) {
         if (folder !== 'liked' && folder !== 'pretty' && folder !== 'notpretty') {
-            await fileUtils.removeFolder(folder);
+            await fileUtils.removeFolder(folder)
+                .catch((error) => console.error(`Failed to remove ${folder}. Reason: ${error}`));
         }
     }
 };
