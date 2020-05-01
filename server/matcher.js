@@ -206,8 +206,6 @@ const updateUserProfileSelection = async (userData, apiToken) => {
     api.setToken(apiToken);
     if (pretty) {
         await api.likeProfile(userId, false);
-    } else {
-        await api.rejectProfile(userId, 'Manual input');
     }
     await repository.setUserPrettyFlag(userId, pretty);
 };
