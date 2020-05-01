@@ -3,18 +3,6 @@ const rimraf = require("rimraf");
 
 const photosPath = "server/static/photos";
 
-const moveFile = async (fileName, userId, destinationFolder) => {
-    const userPhotoPath = `${photosPath}/${userId}`;
-    await createFolderIfMissing(photosPath, destinationFolder);
-    await fs.renameSync(`${userPhotoPath}/faces/${fileName}`, `${photosPath}/${destinationFolder}/${fileName}`);
-};
-
-const moveSelectedPhotos = async (userId, photoId, destinationFolder) => {
-    const userPhotoPath = `${photosPath}/${userId}`;
-    await createFolderIfMissing(photosPath, destinationFolder);
-    await fs.renameSync(`${userPhotoPath}/${photoId}`, `${photosPath}/${destinationFolder}/${photoId}`);
-};
-
 const removeFolder = async (folder) => {
     await rimraf.sync(`${photosPath}/${folder}`)
 };
@@ -38,4 +26,4 @@ const getImageURLs = async (userId) => {
     return images;
 };
 
-module.exports = {getImageURLs, moveFile, moveSelectedPhotos, removeFolder};
+module.exports = {getImageURLs, createFolderIfMissing, removeFolder};

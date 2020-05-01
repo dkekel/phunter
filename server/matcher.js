@@ -3,6 +3,7 @@ const utils = require("./utils/utils");
 const faceApi = require("./recognition/faceapi");
 const fs = require("fs");
 const fileUtils = require("./utils/fileutils");
+const repository = require("./api/repository");
 
 const photosPath = 'server/static/photos';
 const maxDistance = 300;
@@ -136,22 +137,18 @@ const categorizeUser = async (prediction, user, token) => {
     let prettySum = 0;
     let photosCount = 0;
     let finalPrediction = 0;
-    let maxPrettyScore = 0;
-    let prettyPhotoId;
+    const userPhotos = []
     api.setToken(token);
     for (let key in prediction) {
         photosCount++;
+
+        const photoBase64 = getPhotoBase64(key, user);
         const photoResult = prediction[key];
         const prettyProbability = photoResult[0].probability;
+
+        userPhotos.push(photoBase64);
         if (prettyProbability >= minPretty) {
-            if (prettyProbability > maxPrettyScore) {
-                prettyPhotoId = key;
-                maxPrettyScore = prettyProbability;
-            }
-            await fileUtils.moveFile(key, user, "pretty");
             prettySum += prettyProbability;
-        } else {
-            await fileUtils.moveFile(key, user, "notpretty");
         }
     }
     if (photosCount > 0) {
@@ -159,15 +156,25 @@ const categorizeUser = async (prediction, user, token) => {
         finalPrediction = Math.ceil(prettySum / photosCount * 100) / 100;
         if (finalPrediction >= minPretty) {
             const superLike = finalPrediction >= superPretty;
-            await fileUtils.moveSelectedPhotos(user, prettyPhotoId, "liked");
             await api.likeProfile(user, superLike);
         } else {
             const reason = `final prediction ${finalPrediction}`;
             await api.rejectProfile(user, reason);
         }
+        await storeProcessedUser(user, userPhotos, finalPrediction);
     }
     return finalPrediction;
 };
+
+const getPhotoBase64 = (photoId, userId) => {
+    const bitmap = fs.readFileSync(`${photosPath}/${userId}/${photoId}`);
+    return Buffer.from(bitmap).toString('base64');
+}
+
+const storeProcessedUser = async (userId, userPhotos, userScore) => {
+    const userData = {user: userId, photos: userPhotos, score: userScore};
+    await repository.storeUserData(userData);
+}
 
 const loadFaceModels = async () => {
     await faceApi.loadModels();
