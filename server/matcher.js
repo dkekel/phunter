@@ -37,7 +37,8 @@ const processFeed = async (token) => {
     const feedProfiles = [];
     if (results !== undefined) {
         console.info(`${new Date().toLocaleString()} Fetched feed with ${results.length} results`);
-        const limitedResults = limitResults(results);
+        const limitedResults = utils.limitResults(results, maxResults);
+
         await cleanTempData();
         const iterationResults = await iterateResults(limitedResults);
         try {
@@ -62,13 +63,6 @@ const cleanTempData = async () => {
                 .catch((error) => console.error(`Failed to remove ${folder}. Reason: ${error}`));
         }
     }
-};
-
-const limitResults = (results) => {
-    if (results.length > maxResults) {
-        return results.slice(0, maxResults);
-    }
-    return results;
 };
 
 const fetchProfiles = async () => {

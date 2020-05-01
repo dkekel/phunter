@@ -40,4 +40,11 @@ const createUserFolder = (folderName) => {
     }
 };
 
-module.exports = {downloadFile, sleep};
+const limitResults = (results, maxResults) => {
+    if (results.length > maxResults) {
+        return results.slice(0, maxResults);
+    }
+    return results;
+};
+
+module.exports = {downloadFile, limitResults, sleep};
