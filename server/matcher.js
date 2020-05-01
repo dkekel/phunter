@@ -173,4 +173,26 @@ const loadFaceModels = async () => {
     await faceApi.loadModels();
 };
 
-module.exports = {loadFaceModels, processFeed, getStoredFeed, categorizeUser};
+const getUnverifiedProfiles = async (offset) => {
+    const storedResults = await repository.getUnverifiedResults(offset, maxResults);
+    const unverifiedProfiles = [];
+    for (let result of storedResults) {
+        const profile = {user: result.user, img: result.photos[0], score: result.score};
+        unverifiedProfiles.push(profile);
+    }
+    return unverifiedProfiles;
+}
+
+const updateUserProfileSelection = async (userData, apiToken) => {
+    const userId = userData.userId;
+    const pretty = userData.pretty;
+    api.setToken(apiToken);
+    if (pretty) {
+        await api.likeProfile(userId, false);
+    } else {
+        await api.rejectProfile(userId, 'Manual input');
+    }
+    await repository.setUserPrettyFlag(userId, pretty);
+};
+
+module.exports = {loadFaceModels, processFeed, getStoredFeed, getUnverifiedProfiles, categorizeUser, updateUserProfileSelection};

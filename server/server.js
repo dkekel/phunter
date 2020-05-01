@@ -1,9 +1,14 @@
 const express = require("express");
+const cors = require("cors");
 const bodyParser = require("body-parser");
 const path = require("path");
 const fileUtils = require("./utils/fileutils");
 const matcher = require("./matcher");
 
+const corsOptions = {
+    origin: 'http://localhost:8080',
+    optionsSuccessStatus: 200
+}
 const app = express();
 app.use(express.static(path.join(__dirname, 'static')));
 app.use('/photos', express.static(path.join(__dirname, 'static/photos')));
@@ -17,6 +22,12 @@ app.listen(3000, async () => {
 
 app.get("/", (req, res, next) => {
     res.sendFile(`${__dirname}/html/mentor.html`);
+});
+
+app.get("/results", cors(corsOptions), async (req, res, next) => {
+    const offset = Number(req.query.offset);
+    const results = await matcher.getUnverifiedProfiles(offset);
+    res.json(results);
 });
 
 app.get("/feed", async (req, res, next) => {
@@ -37,4 +48,12 @@ app.post("/categorize", async (req, res, next) => {
     const reqBody = req.body;
     const userResult = await matcher.categorizeUser(reqBody.result, reqBody.user, apiToken);
     res.json({userScore: userResult});
+});
+
+app.options('/markPretty', cors(corsOptions));
+app.post("/markPretty", cors(corsOptions), async (req, res, next) => {
+    const reqBody = req.body;
+    const apiToken = req.header('Api-Token');
+    await matcher.updateUserProfileSelection(reqBody, apiToken);
+    res.json({status: "ok"});
 });
