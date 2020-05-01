@@ -1,7 +1,8 @@
 <template>
   <div id="app" class="container">
     <input id="api-token" type="text" class="form-control" placeholder="API Token" aria-label="Username"
-           aria-describedby="basic-addon1" v-model="apiToken" value="f4aecb01-c26a-4db7-a977-4be1d03a64c7">
+           size="36" aria-describedby="basic-addon1" v-model="apiToken" value="f4aecb01-c26a-4db7-a977-4be1d03a64c7">
+    <ExtractProfiles/>
     <div class="row row-cols-1 row-cols-md-3">
       <ResultCard v-for="(result, index) in results"
                   :key="result.user"
@@ -22,6 +23,7 @@
 <script>
 import ResultCard from "./components/ResultCard";
 import axios from "axios";
+import ExtractProfiles from "./components/ExtractProfiles";
 
 export default {
   name: 'App',
@@ -45,6 +47,7 @@ export default {
     }
   },
   components: {
+    ExtractProfiles,
     ResultCard
   }
 }

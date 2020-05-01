@@ -58,7 +58,8 @@ app.post("/markPretty", cors(corsOptions), async (req, res, next) => {
     res.json({status: "ok"});
 });
 
-app.get("/extractClassified", async (req, res, next) => {
-    await matcher.extractReClassifiedProfiles();
+app.get("/extractClassified", cors(corsOptions), async (req, res, next) => {
+    const type = req.query.type;
+    await matcher.extractReClassifiedProfiles(type);
     res.json({status: "ok"});
 });

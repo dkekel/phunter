@@ -212,14 +212,15 @@ const updateUserProfileSelection = async (userData, apiToken) => {
     await repository.setUserPrettyFlag(userId, pretty);
 };
 
-const extractReClassifiedProfiles = async () => {
-    const verifiedResults = await repository.getVerifiedResults();
+const extractReClassifiedProfiles = async (type) => {
+    const pretty = type === 'pretty';
+    const verifiedResults = await repository.getVerifiedResults(pretty);
     for (let profile of verifiedResults) {
         let index = 0;
        const userId = profile.user;
        for (let facePhoto of profile.faces) {
            const imageName = `${userId}_${index}.jpeg`;
-           fileUtils.writeBase64Image(facePhoto, "pretty", imageName);
+           fileUtils.writeBase64Image(facePhoto, type, imageName);
            index++;
        }
        await repository.markVerifiedResultProcessed(userId);

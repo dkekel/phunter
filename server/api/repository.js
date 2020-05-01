@@ -44,9 +44,9 @@ const getUnverifiedResults = async (offset, maxResults) => {
   return storage.find({pretty: null}).skip(offset).limit(maxResults).toArray();
 }
 
-const getVerifiedResults = async () => {
+const getVerifiedResults = async (pretty) => {
   const storage = await getStorage();
-  return storage.find({pretty: true, processed: false, score: {"$lt": 0.4}}).toArray();
+  return storage.find({pretty: pretty, processed: false, score: {"$lt": 0.4}}).toArray();
 }
 
 const markVerifiedResultProcessed = async (userId) => {
