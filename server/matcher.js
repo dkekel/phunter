@@ -179,6 +179,10 @@ const getFaceBase64 = (photoId, userId) => {
 
 const storeProcessedUser = async (userId, userPhoto, userFaces, userScore) => {
     const userData = {user: userId, photo: userPhoto, faces: userFaces, score: userScore};
+    if (userScore > minPretty) {
+        //Mark "liked" profile as "pretty" to avoid appearing in the manual classification screen
+        userData.pretty = true;
+    }
     await repository.storeUserData(userData);
 }
 
