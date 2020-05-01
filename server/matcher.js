@@ -78,7 +78,7 @@ const iterateResults = async (results) => {
             const user = userObject.user;
             const userId = user._id;
             const distance = userObject.distance_mi;
-            await parsePhotos(user);
+            await downloadPhotos(user);
             const facesCount = await extractFaces(userId);
             if (facesCount > 0 && distance < maxDistance) {
                 const userProcessResult = {userId: userId, userName: user.name};
@@ -95,7 +95,7 @@ const iterateResults = async (results) => {
     return Promise.all(userIterationPromises);
 };
 
-const parsePhotos = async (user) => {
+const downloadPhotos = async (user) => {
     const userId = user._id;
     const photos = user.photos;
     for (let photo of photos) {
