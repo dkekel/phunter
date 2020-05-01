@@ -63,7 +63,7 @@ const isMinFaceSize = (faceBox) => {
 const cropImage = async (folder, file, context) => {
     const sourcePath = `${folder}/${file}`;
     const destinationPath = `${folder}/faces/${file}`;
-    await fileUtils.createFolderIfMissing(folder, "faces");
+    fileUtils.createFolderIfMissing(folder, "faces");
     const clipper = Clipper({canvas: canvas});
     return new Promise(function (resolve, reject) {
         clipper.image(sourcePath, function () {

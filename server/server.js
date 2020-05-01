@@ -57,3 +57,8 @@ app.post("/markPretty", cors(corsOptions), async (req, res, next) => {
     await matcher.updateUserProfileSelection(reqBody, apiToken);
     res.json({status: "ok"});
 });
+
+app.get("/extractClassified", async (req, res, next) => {
+    await matcher.extractReClassifiedProfiles();
+    res.json({status: "ok"});
+});

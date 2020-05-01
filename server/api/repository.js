@@ -28,23 +28,36 @@ const getDbConnection = async () => {
 }
 
 const storeUserData = async (userData) => {
-    const connection = await getDbConnection();
-    const storage = await connection.collection(collectionName);
-    const insertResult = await storage.insertOne(userData);
-    console.info(`User ${userData.user} insertion result: ${insertResult.result.ok}`);
+  const storage = await getStorage();
+  const insertResult = await storage.insertOne(userData);
+  console.info(`User ${userData.user} insertion result: ${insertResult.result.ok}`);
 }
 
 const setUserPrettyFlag = async (userId, pretty) => {
-  const connection = await getDbConnection();
-  const storage = await connection.collection(collectionName);
+  const storage = await getStorage();
   const updateResult = await storage.updateOne({user: userId}, {$set: {pretty: pretty}});
   console.info(`User ${userId} pretty flag ${pretty} update result: ${updateResult.result.ok}`);
 }
 
 const getUnverifiedResults = async (offset, maxResults) => {
-    const connection = await getDbConnection();
-    const storage = await connection.collection(collectionName);
-    return storage.find({pretty: null}).skip(offset).limit(maxResults).toArray();
+  const storage = await getStorage();
+  return storage.find({pretty: null}).skip(offset).limit(maxResults).toArray();
 }
 
-module.exports = {storeUserData, setUserPrettyFlag, getUnverifiedResults};
+const getVerifiedResults = async () => {
+  const storage = await getStorage();
+  return storage.find({pretty: true, processed: false, score: {"$lt": 0.4}}).toArray();
+}
+
+const markVerifiedResultProcessed = async (userId) => {
+  const storage = await getStorage();
+  const updateResult = await storage.updateOne({user: userId}, {$set: {processed: true}});
+  console.info(`User ${userId} set processed result: ${updateResult.result.ok}`);
+}
+
+const getStorage = async () => {
+  const connection = await getDbConnection();
+  return connection.collection(collectionName);
+}
+
+module.exports = {storeUserData, setUserPrettyFlag, markVerifiedResultProcessed, getUnverifiedResults, getVerifiedResults};

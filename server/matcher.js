@@ -178,7 +178,7 @@ const getFaceBase64 = (photoId, userId) => {
 }
 
 const storeProcessedUser = async (userId, userPhoto, userFaces, userScore) => {
-    const userData = {user: userId, photo: userPhoto, faces: userFaces, score: userScore};
+    const userData = {user: userId, photo: userPhoto, faces: userFaces, score: userScore, processed: false};
     if (userScore > minPretty) {
         //Mark "liked" profile as "pretty" to avoid appearing in the manual classification screen
         userData.pretty = true;
@@ -212,4 +212,26 @@ const updateUserProfileSelection = async (userData, apiToken) => {
     await repository.setUserPrettyFlag(userId, pretty);
 };
 
-module.exports = {loadFaceModels, processFeed, getStoredFeed, getUnverifiedProfiles, categorizeUser, updateUserProfileSelection};
+const extractReClassifiedProfiles = async () => {
+    const verifiedResults = await repository.getVerifiedResults();
+    for (let profile of verifiedResults) {
+        let index = 0;
+       const userId = profile.user;
+       for (let facePhoto of profile.faces) {
+           const imageName = `${userId}_${index}.jpeg`;
+           fileUtils.writeBase64Image(facePhoto, "pretty", imageName);
+           index++;
+       }
+       await repository.markVerifiedResultProcessed(userId);
+    }
+};
+
+module.exports = {
+    loadFaceModels,
+    processFeed,
+    getStoredFeed,
+    getUnverifiedProfiles,
+    extractReClassifiedProfiles,
+    categorizeUser,
+    updateUserProfileSelection
+};
