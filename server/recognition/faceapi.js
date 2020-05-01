@@ -3,6 +3,7 @@ const faceApi = require("face-api.js");
 const canvas = require("canvas");
 const fs = require("fs");
 const Clipper = require('image-clipper');
+const fileUtils = require("../utils/fileutils");
 
 const {Canvas, Image, ImageData} = canvas;
 faceApi.env.monkeyPatch({Canvas, Image, ImageData});
@@ -62,7 +63,7 @@ const isMinFaceSize = (faceBox) => {
 const cropImage = async (folder, file, context) => {
     const sourcePath = `${folder}/${file}`;
     const destinationPath = `${folder}/faces/${file}`;
-    await createFolderIfMissing(folder, "faces");
+    await fileUtils.createFolderIfMissing(folder, "faces");
     const clipper = Clipper({canvas: canvas});
     return new Promise(function (resolve, reject) {
         clipper.image(sourcePath, function () {
@@ -78,13 +79,6 @@ const cropImage = async (folder, file, context) => {
                 });
         });
     });
-};
-
-const createFolderIfMissing = async (path, newFolder) => {
-    const newFolderPath = `${path}/${newFolder}`;
-    if (!fs.existsSync(newFolderPath)) {
-        fs.mkdirSync(newFolderPath);
-    }
 };
 
 module.exports = {loadModels, recognizeFaces};
