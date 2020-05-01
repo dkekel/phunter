@@ -3,7 +3,7 @@
     <input id="api-token" type="text" class="form-control" placeholder="API Token" aria-label="Username"
            size="36" aria-describedby="basic-addon1" v-model="apiToken" value="f4aecb01-c26a-4db7-a977-4be1d03a64c7">
     <ExtractProfiles/>
-    <div class="row row-cols-1 row-cols-md-3">
+    <div class="row row-cols-1 row-cols-md-5">
       <ResultCard v-for="(result, index) in results"
                   :key="result.user"
                   :user-id="result.user"
