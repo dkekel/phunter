@@ -83,12 +83,11 @@ const iterateResults = async (results) => {
         const userProcessPromise = new Promise(async resolve => {
             const user = userObject.user;
             const userId = user._id;
-            const city = user.city !== undefined ? user.city.name : undefined;
             const distance = userObject.distance_mi;
             await parsePhotos(user);
             const facesCount = await extractFaces(userId);
             if (facesCount > 0 && distance < maxDistance) {
-                const userProcessResult = {userId: userId, userName: user.name, city: city};
+                const userProcessResult = {userId: userId, userName: user.name};
                 resolve(userProcessResult);
             } else {
                 //If no faces for a given profile, we don't want to see it again

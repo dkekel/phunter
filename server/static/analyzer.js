@@ -90,7 +90,6 @@ const resetRetryStatus = () => {
 const predictImages = async (user) => {
     const userId = user.userId;
     const userName = user.userName;
-    const userCity = user.city;
     return new Promise((resolve, reject) => {
         const request = new XMLHttpRequest();
         request.open('GET', `http://localhost:3000/images/${userId}`, false);
@@ -107,7 +106,7 @@ const predictImages = async (user) => {
                 appendThumbnail(userId, image, predictionResult);
                 updateProbabilityBars(result);
             }
-            await categorizeResult({user: userId, result: result}, userName, userCity);
+            await categorizeResult({user: userId, result: result}, userName);
             resolve();
         };
         request.send();
@@ -169,7 +168,7 @@ ${imageResult[i].className}: ${classNormalized.toFixed(2)}%</div>`;
     }
 };
 
-const categorizeResult = (result, userName, userCity) => {
+const categorizeResult = (result, userName) => {
     return new Promise(resolve => {
         const request = new XMLHttpRequest();
         const data = JSON.stringify(result);
@@ -181,7 +180,7 @@ const categorizeResult = (result, userName, userCity) => {
                 if (request.status === 200) {
                     const data = JSON.parse(request.response);
                     const userScore = data.userScore;
-                    appendUserTotalLog(userScore, userName, userCity);
+                    appendUserTotalLog(userScore, userName);
                 }
                 resolve();
             }
@@ -210,7 +209,7 @@ const appendFeedWaitLog = () => {
     logRecord.innerHTML += `Waiting ${retrySleepIncrement / 1000} second for the feed.`;
 };
 
-const appendUserTotalLog = (prettyScore, userName, userCity) => {
+const appendUserTotalLog = (prettyScore, userName) => {
     const logRecord = createLogLine();
     const roundedScore = parseFloat(prettyScore.toFixed(1));
     let fibonacciScore;
@@ -220,11 +219,7 @@ const appendUserTotalLog = (prettyScore, userName, userCity) => {
             break;
         }
     }
-    let logString = `<b>${userName}</b> `;
-    if (userCity !== undefined) {
-        logString += `<b>(${userCity})</b> `;
-    }
-    logRecord.innerHTML += logString + `score: ${fibonacciScore}`;
+    logRecord.innerHTML += `<b>${userName}</b> score: ${fibonacciScore}`;
 };
 
 const createLogLine = () => {
