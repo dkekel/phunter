@@ -130,16 +130,23 @@ const categorizeUser = async (prediction, user, token) => {
     let prettySum = 0;
     let photosCount = 0;
     let finalPrediction = 0;
-    const userPhotos = []
+    let maxPrediction = 0;
+    let userPhoto;
+    const userFaces = [];
     api.setToken(token);
     for (let key in prediction) {
         photosCount++;
+        userPhoto = key;
 
-        const photoBase64 = getPhotoBase64(key, user);
+        const faceBase64 = getFaceBase64(key, user);
         const photoResult = prediction[key];
         const prettyProbability = photoResult[0].probability;
 
-        userPhotos.push(photoBase64);
+        userFaces.push(faceBase64);
+        if (prettyProbability > maxPrediction) {
+            maxPrediction = prettyProbability;
+            userPhoto = key;
+        }
         if (prettyProbability >= minPretty) {
             prettySum += prettyProbability;
         }
@@ -154,7 +161,8 @@ const categorizeUser = async (prediction, user, token) => {
             const reason = `final prediction ${finalPrediction}`;
             await api.rejectProfile(user, reason);
         }
-        await storeProcessedUser(user, userPhotos, finalPrediction);
+        const profilePhoto = getPhotoBase64(userPhoto, user);
+        await storeProcessedUser(user, profilePhoto, userFaces, finalPrediction);
     }
     return finalPrediction;
 };
@@ -164,8 +172,13 @@ const getPhotoBase64 = (photoId, userId) => {
     return Buffer.from(bitmap).toString('base64');
 }
 
-const storeProcessedUser = async (userId, userPhotos, userScore) => {
-    const userData = {user: userId, photos: userPhotos, score: userScore};
+const getFaceBase64 = (photoId, userId) => {
+    const bitmap = fs.readFileSync(`${photosPath}/${userId}/faces/${photoId}`);
+    return Buffer.from(bitmap).toString('base64');
+}
+
+const storeProcessedUser = async (userId, userPhoto, userFaces, userScore) => {
+    const userData = {user: userId, photo: userPhoto, faces: userFaces, score: userScore};
     await repository.storeUserData(userData);
 }
 
@@ -177,7 +190,7 @@ const getUnverifiedProfiles = async (offset) => {
     const storedResults = await repository.getUnverifiedResults(offset, maxResults);
     const unverifiedProfiles = [];
     for (let result of storedResults) {
-        const profile = {user: result.user, img: result.photos[0], score: result.score};
+        const profile = {user: result.user, img: result.photo, score: result.score};
         unverifiedProfiles.push(profile);
     }
     return unverifiedProfiles;
