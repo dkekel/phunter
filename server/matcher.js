@@ -191,13 +191,14 @@ const loadFaceModels = async () => {
 };
 
 const getUnverifiedProfiles = async (offset) => {
+    const unverifiedCount = await repository.countUnverifiedResults();
     const storedResults = await repository.getUnverifiedResults(offset, maxResults);
     const unverifiedProfiles = [];
     for (let result of storedResults) {
         const profile = {user: result.user, img: result.photo, score: result.score};
         unverifiedProfiles.push(profile);
     }
-    return unverifiedProfiles;
+    return {count: unverifiedCount, list: unverifiedProfiles};
 }
 
 const updateUserProfileSelection = async (userData, apiToken) => {

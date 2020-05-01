@@ -44,6 +44,11 @@ const getUnverifiedResults = async (offset, maxResults) => {
   return storage.find({pretty: null}).skip(offset).limit(maxResults).toArray();
 }
 
+const countUnverifiedResults = async () => {
+  const storage = await getStorage();
+  return storage.countDocuments({pretty: null});
+}
+
 const getVerifiedResults = async (pretty) => {
   const storage = await getStorage();
   return storage.find({pretty: pretty, processed: false, score: {"$lt": 0.4}}).toArray();
@@ -60,4 +65,11 @@ const getStorage = async () => {
   return connection.collection(collectionName);
 }
 
-module.exports = {storeUserData, setUserPrettyFlag, markVerifiedResultProcessed, getUnverifiedResults, getVerifiedResults};
+module.exports = {
+  storeUserData,
+  setUserPrettyFlag,
+  markVerifiedResultProcessed,
+  getUnverifiedResults,
+  getVerifiedResults,
+  countUnverifiedResults
+};

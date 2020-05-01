@@ -1,7 +1,17 @@
 <template>
   <div id="app" class="container">
-    <input id="api-token" type="text" class="form-control" placeholder="API Token" aria-label="Username"
-           size="36" aria-describedby="basic-addon1" v-model="apiToken" value="f4aecb01-c26a-4db7-a977-4be1d03a64c7">
+    <div class="input-group mb-3">
+      <div class="input-group-prepend">
+        <span class="input-group-text" id="basic-addon1">API Token</span>
+      </div>
+      <input id="api-token" type="text" class="form-control" placeholder="API Token" aria-label="Username"
+             size="36" aria-describedby="basic-addon1" v-model="apiToken" value="f4aecb01-c26a-4db7-a977-4be1d03a64c7">
+      <div class="input-group-append">
+        <div class="btn btn-primary">
+          Profiles left <span class="badge badge-light">{{totalCount}}</span>
+        </div>
+      </div>
+    </div>
     <ExtractProfiles/>
     <div class="row row-cols-1 row-cols-md-5">
       <ResultCard v-for="(result, index) in results"
@@ -30,7 +40,8 @@ export default {
   data () {
     return {
       apiToken: "f4aecb01-c26a-4db7-a977-4be1d03a64c7",
-      results: []
+      results: [],
+      totalCount: Number
     }
   },
   mounted () {
@@ -39,11 +50,19 @@ export default {
   methods: {
     removeCard(index) {
       this.results.splice(index, 1);
+      this.totalCount--;
+      if (this.results.length < 5) {
+        this.fetchResults();
+      }
     },
     fetchResults() {
       axios
               .get(`http://localhost:3000/results?offset=${this.results.length}`)
-              .then(response => this.results = this.results.concat(response.data));
+              .then(response => {
+                const result = response.data;
+                this.totalCount = result.count;
+                this.results = this.results.concat(result.list);
+              });
     }
   },
   components: {
