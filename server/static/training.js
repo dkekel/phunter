@@ -2,8 +2,7 @@ const SEED_WORD = "fobonaccigirls";
 const seed = new Math.seedrandom(SEED_WORD);
 
 const MOBILENET_VERSION = 2;
-const MAX_IMAGES = 200;
-const TEST_IMAGES_SIZE = 0;
+const TEST_IMAGE_PERCENT = 0.1;
 
 const IMAGE_SIZE = 224;
 
@@ -31,13 +30,16 @@ const trainModel = async (trainData) => {
   // 1. Setup dataset parameters
   const classLabels = ['pretty', 'notPretty'];
 
-  let NUM_IMAGE_PER_CLASS = Math.ceil(MAX_IMAGES / classLabels.length);
+  const maxTrainData = Math.max(trainData[classLabels[0]].length, trainData[classLabels[1]].length);
+  const minTrainData = Math.min(trainData[classLabels[0]].length, trainData[classLabels[1]].length);
 
-  const minTrainData = Math.min(trainData.pretty.length, trainData.notPretty.length);
+  let NUM_IMAGE_PER_CLASS = Math.ceil(maxTrainData / classLabels.length);
+
   if (NUM_IMAGE_PER_CLASS > minTrainData) {
     NUM_IMAGE_PER_CLASS = minTrainData;
   }
-  const TRAIN_VALIDATION_SIZE_PER_CLASS = NUM_IMAGE_PER_CLASS
+  const TEST_IMAGES_SIZE = Math.ceil(NUM_IMAGE_PER_CLASS * TEST_IMAGE_PERCENT);
+  const TRAIN_VALIDATION_SIZE_PER_CLASS = NUM_IMAGE_PER_CLASS - TEST_IMAGES_SIZE;
 
   console.info(`train/validation size: ${TRAIN_VALIDATION_SIZE_PER_CLASS * classLabels.length}`);
 
