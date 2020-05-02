@@ -32,7 +32,8 @@ app.get("/train", (req, res, next) => {
 
 app.get("/results", cors(corsOptions), async (req, res, next) => {
     const offset = Number(req.query.offset);
-    const results = await matcher.getUnverifiedProfiles(offset);
+    const prettyFlag = req.query.classType === 'pretty';
+    const results = await matcher.getUnverifiedProfiles(prettyFlag, offset);
     res.json(results);
 });
 

@@ -193,9 +193,7 @@ const loadFaceModels = async () => {
     await faceApi.loadModels();
 };
 
-const getUnverifiedProfiles = async (offset) => {
-    //TODO for the moment get only non-pretty profiles for re-classification
-    const prettyFlag = false;
+const getUnverifiedProfiles = async (prettyFlag, offset) => {
     const unverifiedCount = await repository.countUnverifiedResults(prettyFlag);
     const storedResults = await repository.getUnverifiedResults(prettyFlag, offset, maxResults);
     const unverifiedProfiles = [];

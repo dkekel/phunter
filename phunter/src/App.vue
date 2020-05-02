@@ -6,6 +6,10 @@
       </div>
       <input id="api-token" type="text" class="form-control" placeholder="API Token" aria-label="Username"
              size="36" aria-describedby="basic-addon1" v-model="apiToken" value="f4aecb01-c26a-4db7-a977-4be1d03a64c7">
+      <select v-model="classType" @change="fetchResults(true)">
+        <option label="Pretty" :value="'pretty'">Pretty</option>
+        <option label="Not Pretty" selected :value="'not-pretty'">Not Pretty</option>
+      </select>
       <div class="input-group-append">
         <div class="btn btn-primary">
           Profiles left <span class="badge badge-light">{{totalCount}}</span>
@@ -40,6 +44,7 @@ export default {
   data () {
     return {
       apiToken: "f4aecb01-c26a-4db7-a977-4be1d03a64c7",
+      classType: 'not-pretty',
       results: [],
       totalCount: Number
     }
@@ -55,13 +60,14 @@ export default {
         this.fetchResults();
       }
     },
-    fetchResults() {
+    fetchResults(fullReload = false) {
+      const offset = fullReload ? 0 : this.results.length;
       axios
-              .get(`http://localhost:3000/results?offset=${this.results.length}`)
+              .get(`http://localhost:3000/results?classType=${this.classType}&offset=${offset}`)
               .then(response => {
                 const result = response.data;
                 this.totalCount = result.count;
-                this.results = this.results.concat(result.list);
+                this.results = fullReload ? result.list : this.results.concat(result.list);
               });
     }
   },
