@@ -84,8 +84,9 @@ const trainModel = async (trainData) => {
   // assert.isTrue(accuracyV2 > 0.7);
   console.log(lineEnd);
 
-  // const testResults = await teachableMobileNetV2.calculateAccuracyPerClass();
-  // console.info(testResults.reference.accuracy);
+  const accuracyTensors = await teachableMobileNetV2.calculateAccuracyPerClass();
+  const classAccuracy = await tfvis.metrics.perClassAccuracy(accuracyTensors.reference, accuracyTensors.predictions);
+  console.info(classAccuracy);
   await teachableMobileNetV2.save('http://localhost:3000/saveModel');
   return {model: teachableMobileNetV2, lastEpoch};
 }
