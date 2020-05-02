@@ -29,6 +29,11 @@ const getDbConnection = async () => {
 
 const storeUserData = async (userData) => {
   const storage = await getStorage();
+  const existingRecords = await storage.countDocuments({user: userData.user});
+  if (existingRecords > 0) {
+    console.error(`Found existing record for ${userData.user}. Skipping insertion!`);
+    return new Promise(resolve => resolve());
+  }
   const insertResult = await storage.insertOne(userData);
   console.info(`User ${userData.user} insertion result: ${insertResult.result.ok}`);
 }
