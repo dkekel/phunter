@@ -29,7 +29,7 @@
       </ResultCard>
     </div>
     <div class="text-center">
-      <button class="btn btn-info" @click="fetchResults">Show more...</button>
+      <button class="btn btn-info" @click="fetchResults(false)">Show more...</button>
     </div>
   </div>
 </template>
