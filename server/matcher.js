@@ -178,11 +178,14 @@ const getFaceBase64 = (photoId, userId) => {
 }
 
 const storeProcessedUser = async (userId, userPhoto, userFaces, userScore) => {
-    const userData = {user: userId, photo: userPhoto, faces: userFaces, score: userScore, processed: false};
-    if (userScore > minPretty) {
-        //Mark "liked" profile as "pretty" to avoid appearing in the manual classification screen
-        userData.pretty = true;
-    }
+    const userData = {
+        user: userId,
+        photo: userPhoto,
+        faces: userFaces,
+        score: userScore,
+        pretty: userScore > minPretty,
+        processed: false
+    };
     await repository.storeUserData(userData);
 }
 
@@ -191,8 +194,10 @@ const loadFaceModels = async () => {
 };
 
 const getUnverifiedProfiles = async (offset) => {
-    const unverifiedCount = await repository.countUnverifiedResults();
-    const storedResults = await repository.getUnverifiedResults(offset, maxResults);
+    //TODO for the moment get only non-pretty profiles for re-classification
+    const prettyFlag = false;
+    const unverifiedCount = await repository.countUnverifiedResults(prettyFlag);
+    const storedResults = await repository.getUnverifiedResults(prettyFlag, offset, maxResults);
     const unverifiedProfiles = [];
     for (let result of storedResults) {
         const profile = {user: result.user, img: result.photo, score: result.score};
@@ -222,7 +227,6 @@ const extractReClassifiedProfiles = async (type) => {
            fileUtils.writeBase64Image(facePhoto, type, imageName);
            index++;
        }
-       await repository.markVerifiedResultProcessed(userId);
     }
 };
 

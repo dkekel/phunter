@@ -35,29 +35,23 @@ const storeUserData = async (userData) => {
 
 const setUserPrettyFlag = async (userId, pretty) => {
   const storage = await getStorage();
-  const updateResult = await storage.updateOne({user: userId}, {$set: {pretty: pretty}});
+  const updateResult = await storage.updateOne({user: userId}, {$set: {pretty: pretty, processed: true}});
   console.info(`User ${userId} pretty flag ${pretty} update result: ${updateResult.result.ok}`);
 }
 
-const getUnverifiedResults = async (offset, maxResults) => {
+const getUnverifiedResults = async (pretty, offset, maxResults) => {
   const storage = await getStorage();
-  return storage.find({pretty: null}).skip(offset).limit(maxResults).toArray();
+  return storage.find({pretty: pretty, processed: false}).skip(offset).limit(maxResults).toArray();
 }
 
-const countUnverifiedResults = async () => {
+const countUnverifiedResults = async (pretty) => {
   const storage = await getStorage();
-  return storage.countDocuments({pretty: null});
+  return storage.countDocuments({pretty: pretty, processed: false});
 }
 
 const getVerifiedResults = async (pretty) => {
   const storage = await getStorage();
-  return storage.find({pretty: pretty, processed: false, score: {"$lt": 0.4}}).toArray();
-}
-
-const markVerifiedResultProcessed = async (userId) => {
-  const storage = await getStorage();
-  const updateResult = await storage.updateOne({user: userId}, {$set: {processed: true}});
-  console.info(`User ${userId} set processed result: ${updateResult.result.ok}`);
+  return storage.find({pretty: pretty, processed: true}).toArray();
 }
 
 const getStorage = async () => {
@@ -68,7 +62,6 @@ const getStorage = async () => {
 module.exports = {
   storeUserData,
   setUserPrettyFlag,
-  markVerifiedResultProcessed,
   getUnverifiedResults,
   getVerifiedResults,
   countUnverifiedResults
