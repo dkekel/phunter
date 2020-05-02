@@ -25,8 +25,11 @@
     "image-clipper": "^0.4.4",
     "ml5": "^0.5.0",
     "mongodb": "^3.5.7",
+    "multer": "^1.4.2",
     "node-fetch": "^2.6.0",
     "nodemon": "^2.0.3",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11"
   }
 }

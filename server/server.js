@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const multer = require("multer");
 const bodyParser = require("body-parser");
 const path = require("path");
 const fileUtils = require("./utils/fileutils");
@@ -9,6 +10,7 @@ const corsOptions = {
     origin: 'http://localhost:8080',
     optionsSuccessStatus: 200
 }
+const upload = multer({dest: path.join(__dirname, 'uploads/')});
 const app = express();
 app.use(express.static(path.join(__dirname, 'static')));
 app.use('/photos', express.static(path.join(__dirname, 'static/photos')));
@@ -22,6 +24,10 @@ app.listen(3000, async () => {
 
 app.get("/", (req, res, next) => {
     res.sendFile(`${__dirname}/html/mentor.html`);
+});
+
+app.get("/train", (req, res, next) => {
+    res.sendFile(`${__dirname}/html/trainer.html`);
 });
 
 app.get("/results", cors(corsOptions), async (req, res, next) => {
@@ -43,6 +49,11 @@ app.get("/images/:userId", async (req, res, next) => {
     res.json({images: images});
 });
 
+app.get("/trainModel", async (req, res, next) => {
+    const model = await matcher.getTrainModel();
+    res.json(model);
+});
+
 app.post("/categorize", async (req, res, next) => {
     const apiToken = req.header('Api-Token');
     const reqBody = req.body;
@@ -55,6 +66,15 @@ app.post("/markPretty", cors(corsOptions), async (req, res, next) => {
     const reqBody = req.body;
     const apiToken = req.header('Api-Token');
     await matcher.updateUserProfileSelection(reqBody, apiToken);
+    res.json({status: "ok"});
+});
+
+app.post("/saveModel", upload.any(), async (req, res, next) => {
+    const files = req.files;
+    const modelFolder = Date.now();
+    for (let file of files) {
+        fileUtils.saveTrainedModel(file.filename, file.originalname, modelFolder);
+    }
     res.json({status: "ok"});
 });
 

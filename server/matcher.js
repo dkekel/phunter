@@ -226,11 +226,26 @@ const extractReClassifiedProfiles = async (type) => {
     }
 };
 
+const getTrainModel = async () => {
+    const classAModel = await repository.getVerifiedResults(true);
+    let classASamples = []
+    for (let result of classAModel) {
+        classASamples = classASamples.concat(result.faces);
+    }
+    const classBModel = await repository.getVerifiedResults(false);
+    let classBSamples = []
+    for (let result of classBModel) {
+        classBSamples = classBSamples.concat(result.faces);
+    }
+    return {pretty: classASamples, notPretty: classBSamples};
+}
+
 module.exports = {
     loadFaceModels,
     processFeed,
     getStoredFeed,
     getUnverifiedProfiles,
+    getTrainModel,
     extractReClassifiedProfiles,
     categorizeUser,
     updateUserProfileSelection
