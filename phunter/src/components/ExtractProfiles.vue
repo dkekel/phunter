@@ -2,7 +2,7 @@
     <div class="container">
         <div class="card" style="width: 18rem;">
             <div class="card-body">
-                <h5 class="card-title">Processed results</h5>
+                <h5 class="card-title">Pending results</h5>
             </div>
             <form>
                 <div class="form-group col-md-12">
