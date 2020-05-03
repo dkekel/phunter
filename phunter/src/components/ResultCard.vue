@@ -6,22 +6,20 @@
             <div class="alert alert-info">
                 <div class="progress" style="height: 20px;">
                     <div class="progress-bar bg-success" role="progressbar" :style="{ width: pretty + '%' }"
-                         :aria-valuenow="pretty" aria-valuemin="0" aria-valuemax="100">
-                        Pretty: {{pretty}}%
+                         :aria-valuenow="pretty" aria-valuemin="0" aria-valuemax="100">{{pretty}}%
                     </div>
                 </div>
                 <div class="progress" style="height: 20px;">
                     <div class="progress-bar bg-warning" role="progressbar" :style="{ width: notPretty + '%' }"
-                         :aria-valuenow="notPretty" aria-valuemin="0" aria-valuemax="100">
-                        Not pretty: {{notPretty}}%
+                         :aria-valuenow="notPretty" aria-valuemin="0" aria-valuemax="100">{{notPretty}}%
                     </div>
                 </div>
             </div>
         </div>
         <div class="card-footer">
             <div class="btn-group w-100" role="group" aria-label="User Input">
-                <button type="button" class="btn btn-success" @click="markPretty">Pretty</button>
-                <button type="button" class="btn btn-danger" @click="markNotPretty">Not Pretty</button>
+                <button type="button" class="btn btn-sm btn-success" @click="markPretty">Pretty</button>
+                <button type="button" class="btn btn-sm btn-danger" @click="markNotPretty">Not Pretty</button>
             </div>
         </div>
     </div>

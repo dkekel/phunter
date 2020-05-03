@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div class="row">
-      <div class="col">
+      <div class="col-8">
         <div class="row row-cols-1 row-cols-md-4">
           <ResultCard v-for="(result, index) in results"
                       :key="result.user"
@@ -19,7 +19,7 @@
           <button class="btn btn-info" @click="showMore">Show more...</button>
         </div>
       </div>
-      <div class="col-2">
+      <div class="col">
         <ExtractProfiles v-on:switch-result-type="switchResults"
                          v-on:mark-all-processed="markAllProcessed"
                          :totalCount="totalCount"
