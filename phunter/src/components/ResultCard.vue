@@ -45,14 +45,9 @@
     methods: {
       markPretty() {
         this.$emit('mark-pretty', {userId: this.userId});
-        this.removeCard();
       },
       markNotPretty() {
         this.$emit('mark-not-pretty', {userId: this.userId});
-        this.removeCard();
-      },
-      removeCard() {
-        this.$emit("remove-card");
       }
     }
   }

@@ -9,9 +9,8 @@
                       :image-src="result.img"
                       :score="result.score"
                       :api-token="apiToken"
-                      v-on:mark-pretty="markPretty"
-                      v-on:mark-not-pretty="markNotPretty"
-                      v-on:remove-card="removeCard(index)"
+                      v-on:mark-pretty="markPretty($event, index)"
+                      v-on:mark-not-pretty="markNotPretty($event, index)"
           >
           </ResultCard>
         </div>
@@ -53,15 +52,15 @@ export default {
     this.fetchResults();
   },
   methods: {
-    markPretty(event) {
+    markPretty(event, index) {
       const userId = event.userId;
       this.markProfile(userId, true);
-      this.removeCard(event.index);
+      this.removeCard(index);
     },
-    markNotPretty(event) {
+    markNotPretty(event, index) {
       const userId = event.userId;
       this.markProfile(userId, false);
-      this.removeCard(event.index);
+      this.removeCard(index);
     },
     markProfile(userId, prettyFlag) {
       axios
