@@ -245,7 +245,7 @@ const extractReClassifiedProfiles = async (type) => {
     }
 };
 
-const getTrainModel = async () => {
+const getTrainingData = async () => {
     const classAModel = await repository.getVerifiedResults(true);
     let classASamples = []
     for (let result of classAModel) {
@@ -259,14 +259,25 @@ const getTrainModel = async () => {
     return {pretty: classASamples, notPretty: classBSamples};
 }
 
+const getStoredModels = async () => {
+    return repository.getStoredModels();
+}
+
+const storeTrainedModelMetadata = async (modelMeta) => {
+    const metadata = {...modelMeta, default: false};
+    await repository.storeTrainedModel(metadata)
+}
+
 module.exports = {
     loadFaceModels,
     processFeed,
     getStoredFeed,
     getUnverifiedProfiles,
-    getTrainModel,
+    getTrainingData,
+    getStoredModels,
     extractReClassifiedProfiles,
     categorizeUser,
     updateUserProfileSelection,
+    storeTrainedModelMetadata,
     markAllProcessed
 };

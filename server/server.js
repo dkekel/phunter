@@ -50,11 +50,6 @@ app.get("/images/:userId", async (req, res, next) => {
     res.json({images: images});
 });
 
-app.get("/trainModel", cors(corsOptions), async (req, res, next) => {
-    const model = await matcher.getTrainModel();
-    res.json(model);
-});
-
 app.post("/categorize", async (req, res, next) => {
     const apiToken = req.header('Api-Token');
     const reqBody = req.body;
@@ -77,12 +72,29 @@ app.post("/markAllProcessed", cors(corsOptions), async (req, res, next) => {
     res.json(result);
 });
 
-app.post("/saveModel", upload.any(), async (req, res, next) => {
+app.get("/trainModel", cors(corsOptions), async (req, res, next) => {
+    const trainData = await matcher.getTrainingData();
+    res.json(trainData);
+});
+
+app.get("/storedModels", cors(corsOptions), async (req, res, next) => {
+    const models = await matcher.getStoredModels();
+    res.json(models);
+});
+
+app.post("/saveModel", cors(corsOptions), upload.any(), async (req, res, next) => {
     const files = req.files;
     const modelFolder = Date.now();
     for (let file of files) {
         fileUtils.saveTrainedModel(file.filename, file.originalname, modelFolder);
     }
+    res.json({modelName: modelFolder});
+});
+
+app.options('/saveModelMetadata', cors(corsOptions));
+app.post("/saveModelMetadata", cors(corsOptions), async (req, res, next) => {
+    const modelMetadata = req.body;
+    await matcher.storeTrainedModelMetadata(modelMetadata);
     res.json({status: "ok"});
 });
 

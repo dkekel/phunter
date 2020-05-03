@@ -1,10 +1,10 @@
 <template>
   <div class="container">
     <div class="row">
-      <div class="col">
+      <div class="col-8">
         <div v-if="status === 'READY'" class="container">
-          <div class="alert alert-info" role="alert">
-            <h4 class="alert-heading">Model needs training</h4>
+          <div class="alert alert-secondary" role="alert">
+            <h4 class="alert-heading">Train new model</h4>
             <p>Please configure training parameters and click "Train" button.</p>
             <hr>
             <p class="mb-0">The result will be available at the end of the training.</p>
@@ -24,13 +24,12 @@
                          :accuracy="totalAccuracy"
                          :loss="totalLoss"
                          :validation-accuracy="validationAccuracy"/>
-        <div class="text-center">
-          <button v-if="status === 'FINISHED'"
-                  type="button" class="btn btn-success btn-lg" @click="saveModel">Save model
-          </button>
+        <div v-if="status === 'FINISHED'" class="text-center mb-3">
+          <button type="button" class="btn btn-success btn-lg" @click="saveModel">Save model</button>
         </div>
+        <TrainedModels :key="savedModelsVer"/>
       </div>
-      <div class="col-2">
+      <div class="col">
         <TrainingConfig v-on:start-training="startTraining"/>
       </div>
     </div>
@@ -42,13 +41,16 @@
 import TrainingResults from "./components/training/TrainingResults";
 import TrainingConfig from "./components/training/TrainingConfig";
 import {getTrainModel, trainModel} from "./training";
+import axios from 'axios';
 import {metrics} from "@tensorflow/tfjs-vis";
+import TrainedModels from "./components/training/TrainedModels";
 
 export default {
   name: 'TrainModel',
-  components: {TrainingConfig, TrainingResults},
+  components: {TrainedModels, TrainingConfig, TrainingResults},
   data () {
     return {
+      savedModelsVer: 1,
       currentEpoch: 0,
       totalEpochs: 200,
       totalAccuracy: null,
@@ -69,6 +71,7 @@ export default {
       const vueData = this;
       this.status = "TRAINING";
       this.totalEpochs = event.epochs;
+      this.currentEpoch = 0;
       const dataSet = await getTrainModel();
       const epochCallback = () => {
         vueData.currentEpoch++;
@@ -90,7 +93,21 @@ export default {
       this.validationAccuracy = lastEpoch.val_acc.toFixed(3);
     },
     async saveModel() {
-      await this.trainedModel.save('http://localhost:3000/saveModel');
+      const saveResult = await this.trainedModel.save('http://localhost:3000/saveModel');
+      const response = saveResult.responses[0];
+      if (response.status === 200) {
+        const responseBody = await response.json();
+        await axios
+                .post('http://localhost:3000/saveModelMetadata', {
+                  name: responseBody.modelName,
+                  totalAccuracy: this.totalAccuracy,
+                  validationAccuracy: this.validationAccuracy,
+                  classResults: this.classResults
+                })
+                .then(() => this.savedModelsVer++);
+      } else {
+        console.error("Failed to save model!");
+      }
     }
   }
 }

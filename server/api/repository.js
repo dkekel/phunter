@@ -6,8 +6,9 @@ const url = 'mongodb://localhost:27017';
 // Database Name
 const dbName = 'phunter';
 
-//Collection name
-const collectionName = "userData";
+//Collection names
+const profilesCollection = "userData";
+const modelsCollection = "tfModels";
 
 // Create a new MongoClient
 let dbConnection;
@@ -28,7 +29,7 @@ const getDbConnection = async () => {
 }
 
 const storeUserData = async (userData) => {
-  const storage = await getStorage();
+  const storage = await getProfilesStorage();
   const existingRecords = await storage.countDocuments({user: userData.user});
   if (existingRecords > 0) {
     console.error(`Found existing record for ${userData.user}. Skipping insertion!`);
@@ -39,42 +40,60 @@ const storeUserData = async (userData) => {
 }
 
 const setUserPrettyFlag = async (userId, pretty) => {
-  const storage = await getStorage();
+  const storage = await getProfilesStorage();
   const updateResult = await storage.updateOne({user: userId}, {$set: {pretty: pretty, processed: true}});
   console.info(`User ${userId} pretty flag ${pretty} update result: ${updateResult.result.ok}`);
 }
 
 const setAllProcessedByPretty = async (pretty) => {
-  const storage = await getStorage();
+  const storage = await getProfilesStorage();
   const updateResult = await storage.updateMany({pretty: pretty, processed: false}, {$set: {processed: true}});
   console.info(`Mark processed for pretty flag ${pretty} result: ${updateResult.result.ok}`);
 }
 
 const getUnverifiedResults = async (pretty, offset, maxResults) => {
-  const storage = await getStorage();
+  const storage = await getProfilesStorage();
   return storage.find({pretty: pretty, processed: false}).skip(offset).limit(maxResults).toArray();
 }
 
 const countUnverifiedResults = async (pretty) => {
-  const storage = await getStorage();
+  const storage = await getProfilesStorage();
   return storage.countDocuments({pretty: pretty, processed: false});
 }
 
 const getVerifiedResults = async (pretty) => {
-  const storage = await getStorage();
+  const storage = await getProfilesStorage();
   return storage.find({pretty: pretty, processed: true}).toArray();
 }
 
-const getStorage = async () => {
+const getStoredModels = async () => {
+  const storage = await getModelsStorage();
+  return storage.find().toArray();
+}
+
+const storeTrainedModel = async (modelData) => {
+  const storage = await getModelsStorage();
+  const insertResult = await storage.insertOne(modelData);
+  console.info(`Model ${modelData.name} insertion result: ${insertResult.result.ok}`);
+}
+
+const getProfilesStorage = async () => {
   const connection = await getDbConnection();
-  return connection.collection(collectionName);
+  return connection.collection(profilesCollection);
+}
+
+const getModelsStorage = async () => {
+  const connection = await getDbConnection();
+  return connection.collection(modelsCollection);
 }
 
 module.exports = {
   storeUserData,
   setUserPrettyFlag,
   setAllProcessedByPretty,
+  storeTrainedModel,
   getUnverifiedResults,
   getVerifiedResults,
+  getStoredModels,
   countUnverifiedResults
 };
