@@ -1,23 +1,60 @@
 <template>
-    <div class="container text-center">
-        <div class="btn-group" role="group" aria-label="Basic example">
-            <button id="pretty" type="button" class="btn btn-success" @click="extractSelected($event)">Extract "Pretty"</button>
-            <button id="not-pretty" type="button" class="btn btn-warning" @click="extractSelected($event)">Extract "Not pretty"</button>
+    <div class="container">
+        <div class="card" style="width: 18rem;">
+            <div class="card-body">
+                <h5 class="card-title">Processed results</h5>
+            </div>
+            <form>
+                <div class="form-group col-md-12">
+                    <div class="input-group mb-3">
+                        <select class="custom-select" id="resultType" v-model="classType" @change="switchResultType">
+                            <option>Result type...</option>
+                            <option label="Pretty" :value="'pretty'">Pretty</option>
+                            <option label="Not Pretty" selected :value="'not-pretty'">Not Pretty</option>
+                        </select>
+                        <div class="input-group-append">
+                            <label class="input-group-text" for="resultType">
+                                Profiles <span class="badge badge-light">{{totalCount}}</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <div class="card-body">
+                <p>Mark all processed:</p>
+                <div class="btn-group" role="group" aria-label="Basic example">
+                    <button type="button" class="btn btn-info" @click="markAllProcessed(true)">
+                        Pretty <span class="badge badge-light">{{pendingPrettyCount}}</span>
+                    </button>
+                    <button type="button" class="btn btn-warning" @click="markAllProcessed(false)">
+                        Not pretty <span class="badge badge-light">{{pendingNotPrettyCount}}</span>
+                    </button>
+                </div>
+
+            </div>
         </div>
     </div>
 </template>
 
 <script>
-  import axios from 'axios';
-
   export default {
     name: "ExtractProfiles",
+    props: {
+      totalCount: Number,
+      pendingPrettyCount: Number,
+      pendingNotPrettyCount: Number
+    },
+    data() {
+      return {
+        classType: 'not-pretty',
+      }
+    },
     methods: {
-      extractSelected(event) {
-        const selectedType = event.currentTarget.id;
-        axios
-          .get(`http://localhost:3000/extractClassified?type=${selectedType}`)
-          .then(() => console.info(`Extracted ${selectedType}`));
+      switchResultType() {
+        this.$emit('switch-result-type', {classType: this.classType});
+      },
+      markAllProcessed(prettyFlag) {
+        this.$emit('mark-all-processed', {pretty: prettyFlag});
       }
     }
   }

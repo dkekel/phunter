@@ -44,6 +44,12 @@ const setUserPrettyFlag = async (userId, pretty) => {
   console.info(`User ${userId} pretty flag ${pretty} update result: ${updateResult.result.ok}`);
 }
 
+const setAllProcessedByPretty = async (pretty) => {
+  const storage = await getStorage();
+  const updateResult = await storage.updateMany({pretty: pretty, processed: false}, {$set: {processed: true}});
+  console.info(`Mark processed for pretty flag ${pretty} result: ${updateResult.result.ok}`);
+}
+
 const getUnverifiedResults = async (pretty, offset, maxResults) => {
   const storage = await getStorage();
   return storage.find({pretty: pretty, processed: false}).skip(offset).limit(maxResults).toArray();
@@ -67,6 +73,7 @@ const getStorage = async () => {
 module.exports = {
   storeUserData,
   setUserPrettyFlag,
+  setAllProcessedByPretty,
   getUnverifiedResults,
   getVerifiedResults,
   countUnverifiedResults

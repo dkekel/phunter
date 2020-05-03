@@ -195,13 +195,20 @@ const loadFaceModels = async () => {
 
 const getUnverifiedProfiles = async (prettyFlag, offset) => {
     const unverifiedCount = await repository.countUnverifiedResults(prettyFlag);
+    const pendingPrettyCount = await repository.countUnverifiedResults(true);
+    const pendingNotPrettyCount = await repository.countUnverifiedResults(false);
     const storedResults = await repository.getUnverifiedResults(prettyFlag, offset, maxResults);
     const unverifiedProfiles = [];
     for (let result of storedResults) {
         const profile = {user: result.user, img: result.photo, score: result.score};
         unverifiedProfiles.push(profile);
     }
-    return {count: unverifiedCount, list: unverifiedProfiles};
+    return {
+        count: unverifiedCount,
+        pendingPretty: pendingPrettyCount,
+        pendingNotPretty: pendingNotPrettyCount,
+        list: unverifiedProfiles
+    };
 }
 
 const updateUserProfileSelection = async (userData, apiToken) => {
@@ -212,6 +219,16 @@ const updateUserProfileSelection = async (userData, apiToken) => {
         await api.likeProfile(userId, false);
     }
     await repository.setUserPrettyFlag(userId, pretty);
+    const pendingPretty = await repository.countUnverifiedResults(true);
+    const pendingNotPretty = await repository.countUnverifiedResults(false);
+    return {pendingPretty: pendingPretty, pendingNotPretty: pendingNotPretty};
+};
+
+const markAllProcessed = async (prettyFlag) => {
+    await repository.setAllProcessedByPretty(prettyFlag);
+    const pendingPretty = await repository.countUnverifiedResults(true);
+    const pendingNotPretty = await repository.countUnverifiedResults(false);
+    return {pendingPretty: pendingPretty, pendingNotPretty: pendingNotPretty};
 };
 
 const extractReClassifiedProfiles = async (type) => {
@@ -250,5 +267,6 @@ module.exports = {
     getTrainModel,
     extractReClassifiedProfiles,
     categorizeUser,
-    updateUserProfileSelection
+    updateUserProfileSelection,
+    markAllProcessed
 };

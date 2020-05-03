@@ -29,15 +29,12 @@
 </template>
 
 <script>
-  import axios from 'axios';
-
   export default {
     name: "ResultCard",
     props: {
       userId: String,
       imageSrc: String,
-      score: Number,
-      apiToken: String
+      score: Number
     },
     computed: {
       pretty() {
@@ -49,17 +46,11 @@
     },
     methods: {
       markPretty() {
-        axios.post('http://localhost:3000/markPretty', {
-          userId: this.userId,
-          pretty: true
-        }, {headers: {"Api-Token": this.apiToken}});
+        this.$emit('mark-pretty', {userId: this.userId});
         this.removeCard();
       },
       markNotPretty() {
-        axios.post('http://localhost:3000/markPretty', {
-          userId: this.userId,
-          pretty: false
-        }, {headers: {"Api-Token": this.apiToken}});
+        this.$emit('mark-not-pretty', {userId: this.userId});
         this.removeCard();
       },
       removeCard() {

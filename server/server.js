@@ -50,7 +50,7 @@ app.get("/images/:userId", async (req, res, next) => {
     res.json({images: images});
 });
 
-app.get("/trainModel", async (req, res, next) => {
+app.get("/trainModel", cors(corsOptions), async (req, res, next) => {
     const model = await matcher.getTrainModel();
     res.json(model);
 });
@@ -66,8 +66,15 @@ app.options('/markPretty', cors(corsOptions));
 app.post("/markPretty", cors(corsOptions), async (req, res, next) => {
     const reqBody = req.body;
     const apiToken = req.header('Api-Token');
-    await matcher.updateUserProfileSelection(reqBody, apiToken);
-    res.json({status: "ok"});
+    const result = await matcher.updateUserProfileSelection(reqBody, apiToken);
+    res.json(result);
+});
+
+app.options('/markAllProcessed', cors(corsOptions));
+app.post("/markAllProcessed", cors(corsOptions), async (req, res, next) => {
+    const pretty = req.body.pretty;
+    const result = await matcher.markAllProcessed(pretty);
+    res.json(result);
 });
 
 app.post("/saveModel", upload.any(), async (req, res, next) => {
