@@ -19,6 +19,11 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group col-md-12">
+                    <label for="resultSize">Results per page</label>
+                    <input type="number" class="form-control" id="resultSize" v-model="paginationSize"
+                           @change="pageSizeChanged">
+                </div>
             </form>
             <div class="card-body">
                 <p>Mark all processed:</p>
@@ -40,6 +45,7 @@
   export default {
     name: "ExtractProfiles",
     props: {
+      pageSize: Number,
       totalCount: Number,
       pendingPrettyCount: Number,
       pendingNotPrettyCount: Number
@@ -47,9 +53,13 @@
     data() {
       return {
         classType: 'not-pretty',
+        paginationSize: this.pageSize
       }
     },
     methods: {
+      pageSizeChanged() {
+        this.$emit('page-size-change', {pageSize: this.pageSize});
+      },
       switchResultType() {
         this.$emit('switch-result-type', {classType: this.classType});
       },

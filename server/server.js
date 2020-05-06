@@ -31,9 +31,10 @@ app.get("/train", (req, res, next) => {
 });
 
 app.get("/results", cors(corsOptions), async (req, res, next) => {
+    const pageSize = Number(req.query.size);
     const offset = Number(req.query.offset);
     const prettyFlag = req.query.classType === 'pretty';
-    const results = await matcher.getUnverifiedProfiles(prettyFlag, offset);
+    const results = await matcher.getUnverifiedProfiles(prettyFlag, pageSize, offset);
     res.json(results);
 });
 

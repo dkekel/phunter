@@ -203,21 +203,16 @@ const loadFaceModels = async () => {
     await faceApi.loadModels();
 };
 
-const getUnverifiedProfiles = async (prettyFlag, offset) => {
+const getUnverifiedProfiles = async (prettyFlag, pageSize, offset) => {
     const unverifiedCount = await repository.countUnverifiedResults(prettyFlag);
     const pendingPrettyCount = await repository.countUnverifiedResults(true);
     const pendingNotPrettyCount = await repository.countUnverifiedResults(false);
-    const storedResults = await repository.getUnverifiedResults(prettyFlag, offset, maxResults);
-    const unverifiedProfiles = [];
-    for (let result of storedResults) {
-        const profile = {user: result.user, img: result.photo, score: result.score};
-        unverifiedProfiles.push(profile);
-    }
+    const storedResults = await repository.getUnverifiedResults(prettyFlag, pageSize, offset);
     return {
         count: unverifiedCount,
         pendingPretty: pendingPrettyCount,
         pendingNotPretty: pendingNotPrettyCount,
-        list: unverifiedProfiles
+        list: storedResults
     };
 }
 

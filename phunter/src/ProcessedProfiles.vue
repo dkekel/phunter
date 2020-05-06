@@ -6,7 +6,7 @@
           <ResultCard v-for="(result, index) in results"
                       :key="result.user"
                       :user-id="result.user"
-                      :image-src="result.img"
+                      :image-src="result.photo"
                       :score="result.score"
                       :api-token="apiToken"
                       v-on:mark-pretty="markPretty($event, index)"
@@ -14,13 +14,25 @@
           >
           </ResultCard>
         </div>
-        <div class="text-center">
-          <button class="btn btn-info" @click="showMore">Show more...</button>
-        </div>
+          <nav aria-label="Result navigation">
+              <ul class="pagination justify-content-center">
+                  <li class="page-item">
+                      <a class="page-link" href="#" tabindex="-1" @click="showMore">
+                          < Previous
+                      </a>
+                  </li>
+                  <li class="page-item disabled"><a class="page-link" href="#">{{page}}/{{totalPages}}</a></li>
+                  <li class="page-item">
+                      <a class="page-link" href="#" @click="showMore">Next ></a>
+                  </li>
+              </ul>
+          </nav>
       </div>
       <div class="col">
         <ExtractProfiles v-on:switch-result-type="switchResults"
+                         v-on:page-size-change="changePageSize"
                          v-on:mark-all-processed="markAllProcessed"
+                         :page-size="pageSize"
                          :totalCount="totalCount"
                          :pending-pretty-count="pendingPrettyCount"
                          :pending-not-pretty-count="pendingNotPrettyCount"/>
@@ -43,13 +55,20 @@ export default {
     return {
       results: [],
       classType: "not-pretty",
+      page: 0,
+      pageSize: 10,
       totalCount: 0,
       pendingPrettyCount: 0,
       pendingNotPrettyCount: 0
     }
   },
   mounted () {
-    this.fetchResults();
+    this.fetchResults(true);
+  },
+  computed: {
+    totalPages() {
+      return Math.ceil(this.totalCount / this.pageSize);
+    }
   },
   methods: {
     markPretty(event, index) {
@@ -87,28 +106,31 @@ export default {
     removeCard(index) {
       this.results.splice(index, 1);
       this.totalCount--;
-      if (this.results.length < 5) {
-        this.fetchResults();
-      }
     },
     showMore() {
       this.fetchResults();
+    },
+    changePageSize(event) {
+      this.pageSize = Number(event.pageSize);
+      this.fetchResults()
     },
     switchResults(event) {
       this.classType = event.classType;
       this.fetchResults(true);
     },
     fetchResults(fullReload = false) {
-      const offset = fullReload ? 0 : this.results.length;
+      //Subtract the difference between page size and current results to reflect removed cards number
+      const offset = fullReload ? 0 : this.page * this.pageSize - (this.pageSize - this.results.length);
       axios
-              .get(`http://localhost:3000/results?classType=${this.classType}&offset=${offset}`)
-              .then(response => {
-                const result = response.data;
-                this.totalCount = result.count;
-                this.pendingPrettyCount = result.pendingPretty;
-                this.pendingNotPrettyCount = result.pendingNotPretty;
-                this.results = fullReload ? result.list : this.results.concat(result.list);
-              });
+        .get(`http://localhost:3000/results?classType=${this.classType}&size=${this.pageSize}&offset=${offset}`)
+        .then(response => {
+          const result = response.data;
+          this.totalCount = result.count;
+          this.pendingPrettyCount = result.pendingPretty;
+          this.pendingNotPrettyCount = result.pendingNotPretty;
+          this.page = fullReload ? 1 : this.page + 1;
+          this.results = result.list;
+        });
     }
   },
   components: {

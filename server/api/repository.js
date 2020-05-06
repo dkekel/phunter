@@ -58,7 +58,12 @@ const getTrainDataPerClass = async () => {
 
 const getUnverifiedResults = async (pretty, pageSize, offset) => {
   const storage = await getProfilesStorage();
-  return storage.find({pretty: pretty, processed: false}).skip(offset).limit(maxResults).toArray();
+  //TODO: improve performance with (see https://stackoverflow.com/a/7230040)
+  return storage
+    .find({pretty: pretty, processed: false}, {_id: 0, faces: 0, pretty: 0, processed: 0})
+    .skip(offset)
+    .limit(pageSize)
+    .toArray();
 }
 
 const countUnverifiedResults = async (pretty) => {
