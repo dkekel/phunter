@@ -73,7 +73,7 @@ const countUnverifiedResults = async (pretty) => {
 
 const getVerifiedResults = async (pretty) => {
   const storage = await getProfilesStorage();
-  return storage.find({pretty: pretty, processed: true}).toArray();
+  return storage.find({pretty: pretty, processed: true}, {_id: 0, faces: 1}).toArray();
 }
 
 const getStoredModels = async () => {

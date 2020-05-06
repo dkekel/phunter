@@ -13,6 +13,10 @@ Please take this into account when using the default model.
 PHunter is using [MongoDB](https://www.mongodb.com/) as its storage.
 You might need to install MongoDB locally or use any Cloud-based service which provides it.
 
+When creating the DB from scratch, the following indexes should be added to improve queries' performance:
+* `db.userData.createIndex({pretty: 1}, {partialFilterExpression: {pretty: false}})`
+* `db.userData.createIndex({processed: 1}, {partialFilterExpression: {processed: false}})`
+
 ### Running the project
 To run the server:
 1. Start node server `node server/server.js`
