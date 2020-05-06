@@ -7,6 +7,10 @@
             </div>
             <form>
                 <div class="form-group col-md-12">
+                    <label for="model-size">Data set limit</label>
+                    <input type="number" class="form-control" id="model-size" v-model.number="dataSetSize">
+                </div>
+                <div class="form-group col-md-12">
                     <label for="epochs">Epochs</label>
                     <input type="number" class="form-control" id="epochs" v-model.number="epochs">
                 </div>
@@ -59,6 +63,7 @@
     name: "TrainingConfig",
     data() {
       return {
+        dataSetSize: null,
         epochs: 200,
         batchSize: 128,
         learningRate: 0.00052,
@@ -69,7 +74,8 @@
     methods: {
       trainModel() {
         this.$emit('start-training',
-          {epochs: this.epochs,
+          {dataSetSize: this.dataSetSize,
+            epochs: this.epochs,
             batch: this.batchSize,
             rate: this.learningRate,
             test: this.testPercent,

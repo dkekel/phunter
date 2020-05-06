@@ -23,7 +23,14 @@ const getTrainModel = async () => {
   });
 };
 
-const trainModel = async (trainData, alpha, epochs, learningRate, batchSize, testPercent, epochCallback) => {
+const trainModel = async (trainData, trainingConfig, epochCallback) => {
+  const dataSetSize = trainingConfig.dataSetSize;
+  const alpha = trainingConfig.alpha;
+  const epochs = trainingConfig.epochs;
+  const learningRate = trainingConfig.rate;
+  const batchSize = trainingConfig.batch;
+  const testPercent = trainingConfig.test;
+
   // 1. Setup dataset parameters
   const classLabels = ['pretty', 'notPretty'];
 
@@ -31,6 +38,9 @@ const trainModel = async (trainData, alpha, epochs, learningRate, batchSize, tes
   const minTrainData = Math.min(trainData[classLabels[0]].length, trainData[classLabels[1]].length);
 
   let NUM_IMAGE_PER_CLASS = Math.ceil(maxTrainData / classLabels.length);
+  if (!!dataSetSize && maxTrainData > dataSetSize) {
+    NUM_IMAGE_PER_CLASS = dataSetSize;
+  }
 
   if (NUM_IMAGE_PER_CLASS > minTrainData) {
     NUM_IMAGE_PER_CLASS = minTrainData;

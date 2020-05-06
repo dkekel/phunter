@@ -76,8 +76,7 @@ export default {
       const epochCallback = () => {
         vueData.currentEpoch++;
       }
-      const trainResult =
-              await trainModel(dataSet, event.alpha, event.epochs, event.rate, event.batch, event.test, epochCallback);
+      const trainResult = await trainModel(dataSet, event, epochCallback);
       await this.calculateClassResults(trainResult.model);
       await this.showMetrics(trainResult.lastEpoch);
       this.status = "FINISHED";
