@@ -51,7 +51,12 @@ const setAllProcessedByPretty = async (pretty) => {
   console.info(`Mark processed for pretty flag ${pretty} result: ${updateResult.result.ok}`);
 }
 
-const getUnverifiedResults = async (pretty, offset, maxResults) => {
+const getTrainDataPerClass = async () => {
+  const storage = await getProfilesStorage();
+  return storage.aggregate([{$group: {_id: "$pretty", facesCount: {$sum: {$size: "$faces"}}}}]).toArray();
+}
+
+const getUnverifiedResults = async (pretty, pageSize, offset) => {
   const storage = await getProfilesStorage();
   return storage.find({pretty: pretty, processed: false}).skip(offset).limit(maxResults).toArray();
 }
@@ -95,5 +100,6 @@ module.exports = {
   getUnverifiedResults,
   getVerifiedResults,
   getStoredModels,
+  getTrainDataPerClass,
   countUnverifiedResults
 };

@@ -189,6 +189,16 @@ const storeProcessedUser = async (userId, userPhoto, userFaces, userScore) => {
     await repository.storeUserData(userData);
 }
 
+const getTrainDataSizePerClass = async () => {
+    const data = await repository.getTrainDataPerClass();
+    const result = [];
+    for (let classType of data) {
+        const classResult = {pretty: classType._id, dataSize: classType.facesCount};
+        result.push(classResult);
+    }
+    return result;
+}
+
 const loadFaceModels = async () => {
     await faceApi.loadModels();
 };
@@ -275,6 +285,7 @@ module.exports = {
     getUnverifiedProfiles,
     getTrainingData,
     getStoredModels,
+    getTrainDataSizePerClass,
     extractReClassifiedProfiles,
     categorizeUser,
     updateUserProfileSelection,

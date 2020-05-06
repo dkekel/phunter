@@ -2,6 +2,7 @@
   <div class="container">
     <div class="row">
       <div class="col-8">
+        <TrainingModelInfo/>
         <div v-if="status === 'READY'" class="container">
           <div class="alert alert-secondary" role="alert">
             <h4 class="alert-heading">Train new model</h4>
@@ -44,10 +45,11 @@ import {getTrainModel, trainModel} from "./training";
 import axios from 'axios';
 import {metrics} from "@tensorflow/tfjs-vis";
 import TrainedModels from "./components/training/TrainedModels";
+import TrainingModelInfo from "./components/training/TrainingModelInfo";
 
 export default {
   name: 'TrainModel',
-  components: {TrainedModels, TrainingConfig, TrainingResults},
+  components: {TrainingModelInfo, TrainedModels, TrainingConfig, TrainingResults},
   data () {
     return {
       savedModelsVer: 1,

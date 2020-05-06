@@ -72,6 +72,11 @@ app.post("/markAllProcessed", cors(corsOptions), async (req, res, next) => {
     res.json(result);
 });
 
+app.get("/trainModelSize", cors(corsOptions), async (req, res, next) => {
+    const trainDataSizes = await matcher.getTrainDataSizePerClass();
+    res.json(trainDataSizes);
+});
+
 app.get("/trainModel", cors(corsOptions), async (req, res, next) => {
     const trainData = await matcher.getTrainingData();
     res.json(trainData);
