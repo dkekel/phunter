@@ -112,7 +112,7 @@ export default {
     },
     changePageSize(event) {
       this.pageSize = Number(event.pageSize);
-      this.fetchResults()
+      this.fetchResults();
     },
     switchResults(event) {
       this.classType = event.classType;

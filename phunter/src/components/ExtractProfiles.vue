@@ -58,7 +58,7 @@
     },
     methods: {
       pageSizeChanged() {
-        this.$emit('page-size-change', {pageSize: this.pageSize});
+        this.$emit('page-size-change', {pageSize: this.paginationSize});
       },
       switchResultType() {
         this.$emit('switch-result-type', {classType: this.classType});
