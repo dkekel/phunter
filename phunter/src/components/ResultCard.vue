@@ -1,7 +1,7 @@
 <template>
     <div class="col mb-4">
         <div class="card text-center h-100">
-        <img :src="'data:image/jpeg;base64,'+ imageSrc" class="card-img-top" alt="Profile Preview">
+        <img :src="'data:image/jpeg;base64,'+ imageSrc" class="card-img-top zoom" alt="Profile Preview">
         <div class="card-body">
             <div class="alert alert-info">
                 <div class="progress" style="height: 20px;">
@@ -54,4 +54,10 @@
 </script>
 
 <style scoped>
+    .zoom:hover {
+        transform: scale(2.25);
+        z-index: 1000;
+        border-bottom-left-radius: calc(.25rem - 1px);
+        border-bottom-right-radius: calc(.25rem - 1px);
+    }
 </style>
