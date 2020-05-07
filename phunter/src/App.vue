@@ -42,6 +42,16 @@
       return {
         apiToken: ""
       }
+    },
+    mounted() {
+      if (!!localStorage.apiToken) {
+        this.apiToken = localStorage.apiToken;
+      }
+    },
+    watch: {
+      apiToken(newApiToken) {
+        localStorage.apiToken = newApiToken;
+      }
     }
   }
 </script>
