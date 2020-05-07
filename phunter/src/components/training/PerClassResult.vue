@@ -5,7 +5,7 @@
                  role="progressbar"
                  :style="{ width: classInfo.accuracy * 100 + '%' }"
                  :aria-valuenow="classInfo.accuracy" aria-valuemin="0" aria-valuemax="1">
-                Class {{index}}: {{classAccuracy[index]}}%
+                Class {{index}}: {{classAccuracy[index].toFixed(2)}}%
             </div>
         </div>
     </div>

@@ -19,7 +19,7 @@
             <tbody>
             <tr v-for="(result, index) in results" :key="index">
                 <th scope="row">Class {{index + 1}}</th>
-                <td>{{result.accuracy}}</td>
+                <td>{{result.accuracy.toFixed(2)}}</td>
                 <td>{{result.count}}</td>
             </tr>
             </tbody>
