@@ -16,14 +16,14 @@
         </div>
           <nav aria-label="Result navigation">
               <ul class="pagination justify-content-center">
-                  <li class="page-item">
-                      <a class="page-link" href="#" tabindex="-1" @click="showMore">
+                  <li class="page-item" :class="{disabled: isFirst}">
+                      <a class="page-link" href="#" tabindex="-1" @click="showPrevious">
                           < Previous
                       </a>
                   </li>
                   <li class="page-item disabled"><a class="page-link" href="#">{{page}}/{{totalPages}}</a></li>
-                  <li class="page-item">
-                      <a class="page-link" href="#" @click="showMore">Next ></a>
+                  <li class="page-item" :class="{disabled: isLast}">
+                      <a class="page-link" href="#" @click="showNext">Next ></a>
                   </li>
               </ul>
           </nav>
@@ -63,11 +63,17 @@ export default {
     }
   },
   mounted () {
-    this.fetchResults(true);
+    this.fetchResults(true, () => this.page = 1);
   },
   computed: {
     totalPages() {
       return Math.ceil(this.totalCount / this.pageSize);
+    },
+    isFirst() {
+      return this.page === 1;
+    },
+    isLast() {
+      return this.page === this.totalPages;
     }
   },
   methods: {
@@ -107,18 +113,22 @@ export default {
       this.results.splice(index, 1);
       this.totalCount--;
     },
-    showMore() {
-      this.fetchResults();
+    showPrevious() {
+      this.page--;
+      this.fetchResults(false);
+    },
+    showNext() {
+      this.fetchResults(false, () => this.page++);
     },
     changePageSize(event) {
       this.pageSize = Number(event.pageSize);
-      this.fetchResults();
+      this.fetchResults(true, () => this.page = 1);
     },
     switchResults(event) {
       this.classType = event.classType;
-      this.fetchResults(true);
+      this.fetchResults(true, () => this.page = 1);
     },
-    fetchResults(fullReload = false) {
+    fetchResults(fullReload, callback) {
       //Subtract the difference between page size and current results to reflect removed cards number
       const offset = fullReload ? 0 : this.page * this.pageSize - (this.pageSize - this.results.length);
       axios
@@ -128,8 +138,10 @@ export default {
           this.totalCount = result.count;
           this.pendingPrettyCount = result.pendingPretty;
           this.pendingNotPrettyCount = result.pendingNotPretty;
-          this.page = fullReload ? 1 : this.page + 1;
           this.results = result.list;
+          if (!!callback) {
+            callback();
+          }
         });
     }
   },
