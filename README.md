@@ -1,4 +1,4 @@
-## PHunter (Fibonacci Girls)
+## PHunter
 This project is an attempt to automate online dating. 
 It uses TensorFlow models to classify and select Tinder profiles.
 
