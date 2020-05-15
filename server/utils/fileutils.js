@@ -16,6 +16,35 @@ const createFolderIfMissing = (path, newFolder) => {
     }
 };
 
+const getUserPhotosFolder = (userId) => {
+    return `${photosPath}/${userId}`;
+};
+
+const getFaceImage = (photoId, userId) => {
+    return fs.readFileSync(`${photosPath}/${userId}/faces/${photoId}`);
+
+}
+
+const getProfileImage = (photoId, userId) => {
+    return fs.readFileSync(`${photosPath}/${userId}/${photoId}`);
+}
+
+const getUserPhotos = (userId) => {
+    const photosFolder = getUserPhotosFolder(userId);
+    return fs.readdirSync(photosFolder);
+}
+
+const getStoredFeed = async () => {
+    const userList = [];
+    const dirScan = await fs.readdirSync(photosPath);
+    for (let file of dirScan) {
+        if (file !== "notpretty" && file !== "pretty") {
+            userList.push({userId: file, userName: 'Fake'});
+        }
+    }
+    return userList;
+};
+
 const getImageURLs = async (userId) => {
     const images = [];
     const path = `${photosPath}/${userId}/faces`;
@@ -45,4 +74,15 @@ const moveUploadedFile = (fromFile, toFile) => {
     fs.renameSync(fromFile, toFile);
 };
 
-module.exports = {getImageURLs, writeBase64Image, saveTrainedModel, createFolderIfMissing, removeFolder};
+const cleanTempData = async () => {
+    const tempFolders = await fs.readdirSync(photosPath);
+    for (let folder of tempFolders) {
+        if (folder !== 'liked' && folder !== 'pretty' && folder !== 'notpretty') {
+            await fileUtils.removeFolder(folder)
+              .catch((error) => console.error(`Failed to remove ${folder}. Reason: ${error}`));
+        }
+    }
+};
+
+module.exports = {getImageURLs, getStoredFeed, getUserPhotos, getUserPhotosFolder, getFaceImage, getProfileImage,
+    writeBase64Image, saveTrainedModel, createFolderIfMissing, removeFolder, cleanTempData};

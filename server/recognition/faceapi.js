@@ -2,8 +2,7 @@ require("@tensorflow/tfjs-node");
 const faceApi = require("face-api.js");
 const canvas = require("canvas");
 const fs = require("fs");
-const Clipper = require('image-clipper');
-const fileUtils = require("../utils/fileutils");
+const imageUtils = require("../utils/imageutils");
 
 const {Canvas, Image, ImageData} = canvas;
 faceApi.env.monkeyPatch({Canvas, Image, ImageData});
@@ -43,7 +42,7 @@ const processFile = (folder, file) => {
                 const faceScore = faceDescriptors._score;
                 const faceBox = faceDescriptors._box;
                 if (faceScore > minFaceScore && isMinFaceSize(faceBox)) {
-                    await cropImage(folder, file, faceBox)
+                    await imageUtils.cropFaceImage(folder, file, faceBox)
                         .catch((error) => console.error(`Face was not cropped ${error}`));
                     faceFound = true;
                 }
@@ -58,27 +57,6 @@ const processFile = (folder, file) => {
 
 const isMinFaceSize = (faceBox) => {
     return faceBox._width >= minFaceSize || faceBox._height >= minFaceSize;
-};
-
-const cropImage = async (folder, file, context) => {
-    const sourcePath = `${folder}/${file}`;
-    const destinationPath = `${folder}/faces/${file}`;
-    fileUtils.createFolderIfMissing(folder, "faces");
-    const clipper = Clipper({canvas: canvas});
-    return new Promise(function (resolve, reject) {
-        clipper.image(sourcePath, function () {
-            this.crop(context._x, context._y, context._width, context._height)
-                .quality(90)
-                .toFile(destinationPath, (error) => {
-                    if (error) {
-                        console.error(`Failed to crop ${sourcePath}. Reason: ${error}`);
-                        reject(error);
-                    } else {
-                        resolve();
-                    }
-                });
-        });
-    });
 };
 
 module.exports = {loadModels, recognizeFaces};

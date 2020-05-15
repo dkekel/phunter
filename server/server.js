@@ -41,7 +41,6 @@ app.get("/results", cors(corsOptions), async (req, res, next) => {
 app.get("/feed", async (req, res, next) => {
     const apiToken = req.header('Api-Token');
     const userList = await matcher.processFeed(apiToken);
-    // const userList = await matcher.getStoredFeed();
     res.json({users: userList});
 });
 

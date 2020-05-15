@@ -1,35 +1,14 @@
 const api = require("./api/tinder");
 const utils = require("./utils/utils");
 const faceApi = require("./recognition/faceapi");
-const fs = require("fs");
 const fileUtils = require("./utils/fileutils");
 const repository = require("./api/repository");
+const imageUtils = require("./utils/imageutils");
 
-const photosPath = 'server/static/photos';
 const maxDistance = 300;
 const minPretty = 0.4;
 const superPretty = 0.8;
 const maxResults = 10;
-
-const matcher = async () => {
-    let results = await fetchProfiles();
-    while (results !== undefined && results.length > 0) {
-        console.info(`Fetched feed with ${results.length} results`);
-        await iterateResults(results);
-        results = await fetchProfiles();
-    }
-};
-
-const getStoredFeed = async () => {
-    const userList = [];
-    const dirScan = await fs.readdirSync(photosPath);
-    for (let file of dirScan) {
-        if (file !== "notpretty" && file !== "pretty") {
-            userList.push({userId: file, userName: 'Fake'});
-        }
-    }
-    return userList;
-};
 
 const processFeed = async (token) => {
     api.setToken(token);
@@ -39,7 +18,7 @@ const processFeed = async (token) => {
         console.info(`${new Date().toLocaleString()} Fetched feed with ${results.length} results`);
         const limitedResults = utils.limitResults(results, maxResults);
 
-        await cleanTempData();
+        await fileUtils.cleanTempData();
         const iterationResults = await iterateResults(limitedResults);
         try {
             for (let userResult of iterationResults) {
@@ -53,16 +32,6 @@ const processFeed = async (token) => {
         }
     }
     return feedProfiles;
-};
-
-const cleanTempData = async () => {
-    const tempFolders = await fs.readdirSync(photosPath);
-    for (let folder of tempFolders) {
-        if (folder !== 'liked' && folder !== 'pretty' && folder !== 'notpretty') {
-            await fileUtils.removeFolder(folder)
-                .catch((error) => console.error(`Failed to remove ${folder}. Reason: ${error}`));
-        }
-    }
 };
 
 const fetchProfiles = async () => {
@@ -107,8 +76,8 @@ const downloadPhotos = async (user) => {
 };
 
 const extractFaces = async (userId) => {
-    const photosFolder = `${photosPath}/${userId}`;
-    const photoFiles = await fs.readdirSync(photosFolder);
+    const photosFolder = fileUtils.getUserPhotosFolder(userId);
+    const photoFiles = fileUtils.getUserPhotos(userId);
     console.info(`Detecting faces for ${photosFolder}`);
     const recognitionResult = await faceApi.recognizeFaces(photosFolder, photoFiles)
         .catch((error) => console.log(`Failed to extract face ${error}`));
@@ -138,7 +107,7 @@ const categorizeUser = async (prediction, user, token) => {
         photosCount++;
         userPhoto = key;
 
-        const faceBase64 = getFaceBase64(key, user);
+        const faceBase64 = imageUtils.getFaceBase64(key, user);
         const photoResult = prediction[key];
         const prettyProbability = photoResult[0].probability;
 
@@ -161,21 +130,12 @@ const categorizeUser = async (prediction, user, token) => {
             const reason = `final prediction ${finalPrediction}`;
             await api.rejectProfile(user, reason);
         }
-        const profilePhoto = getPhotoBase64(userPhoto, user);
+        await imageUtils.cropProfileImage(userPhoto, user);
+        const profilePhoto = imageUtils.getPhotoBase64(userPhoto, user);
         await storeProcessedUser(user, profilePhoto, userFaces, finalPrediction);
     }
     return finalPrediction;
 };
-
-const getPhotoBase64 = (photoId, userId) => {
-    const bitmap = fs.readFileSync(`${photosPath}/${userId}/${photoId}`);
-    return Buffer.from(bitmap).toString('base64');
-}
-
-const getFaceBase64 = (photoId, userId) => {
-    const bitmap = fs.readFileSync(`${photosPath}/${userId}/faces/${photoId}`);
-    return Buffer.from(bitmap).toString('base64');
-}
 
 const storeProcessedUser = async (userId, userPhoto, userFaces, userScore) => {
     const userData = {
@@ -276,7 +236,6 @@ const storeTrainedModelMetadata = async (modelMeta) => {
 module.exports = {
     loadFaceModels,
     processFeed,
-    getStoredFeed,
     getUnverifiedProfiles,
     getTrainingData,
     getStoredModels,
