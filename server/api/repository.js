@@ -71,9 +71,13 @@ const countUnverifiedResults = async (pretty) => {
   return storage.countDocuments({pretty: pretty, processed: false});
 }
 
-const getVerifiedResults = async (pretty) => {
+const getVerifiedResults = async () => {
   const storage = await getProfilesStorage();
-  return storage.find({pretty: pretty, processed: true}, {_id: 0, faces: 1}).toArray();
+  return storage.aggregate(
+    {$match: {processed: true}},
+    {$group: {_id: "$pretty", faceSet: {$addToSet: "$faces"}}},
+    //Unwind 3 times to flatten all the faces arrays: nested from grouping -> grouped per type -> flat list
+    {$unwind: "$faceSet"}, {$unwind: "$faceSet"}, {$unwind: "$faceSet"}).toArray();
 }
 
 const getStoredModels = async () => {

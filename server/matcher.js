@@ -251,15 +251,15 @@ const extractReClassifiedProfiles = async (type) => {
 };
 
 const getTrainingData = async () => {
-    const classAModel = await repository.getVerifiedResults(true);
+    const classModels = await repository.getVerifiedResults();
     let classASamples = []
-    for (let result of classAModel) {
-        classASamples = classASamples.concat(result.faces);
-    }
-    const classBModel = await repository.getVerifiedResults(false);
     let classBSamples = []
-    for (let result of classBModel) {
-        classBSamples = classBSamples.concat(result.faces);
+    for (let result of classModels) {
+        if (result._id === true) {
+            classASamples.push(result.faceSet);
+        } else if (result._id === false) {
+            classBSamples.push(result.faceSet);
+        }
     }
     return {pretty: classASamples, notPretty: classBSamples};
 }
