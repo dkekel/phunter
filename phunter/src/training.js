@@ -8,7 +8,7 @@ const seed = seedrandom(SEED_WORD);
 const MOBILENET_VERSION = 2;
 const IMAGE_SIZE = 224;
 
-const getTrainModel = async () => {
+const getTrainModel = async (infoCallback) => {
   return new Promise(resolve => {
     const request = new XMLHttpRequest();
     request.open('GET', 'http://localhost:3000/trainModel', true);
@@ -18,12 +18,12 @@ const getTrainModel = async () => {
     };
 
     // Send request
-    console.info("Loading train model...");
+    infoCallback("Loading train model...");
     request.send();
   });
 };
 
-const trainModel = async (trainData, trainingConfig, epochCallback) => {
+const trainModel = async (trainData, trainingConfig, infoCallback, epochCallback) => {
   const dataSetSize = trainingConfig.dataSetSize;
   const alpha = trainingConfig.alpha;
   const epochs = trainingConfig.epochs;
@@ -45,13 +45,14 @@ const trainModel = async (trainData, trainingConfig, epochCallback) => {
     NUM_IMAGE_PER_CLASS = minTrainData;
   }
 
-  console.info(`train/validation size: ${NUM_IMAGE_PER_CLASS * classLabels.length}`);
+  console.info(`train size: ${NUM_IMAGE_PER_CLASS * classLabels.length}`);
 
   // 2. Create our datasets once
   const datasets = await createDatasets(
     trainData,
     classLabels,
-    NUM_IMAGE_PER_CLASS
+    NUM_IMAGE_PER_CLASS,
+    infoCallback
   );
   const trainAndValidationImages = datasets.trainAndValidationImages;
 
@@ -76,6 +77,7 @@ const trainModel = async (trainData, trainingConfig, epochCallback) => {
     epochs,
     learningRate,
     batchSize,
+    infoCallback,
     epochCallback
   );
 
@@ -87,7 +89,8 @@ const trainModel = async (trainData, trainingConfig, epochCallback) => {
 const createDatasets = async (
   trainData,
   classes,
-  trainSize
+  trainSize,
+  infoCallback
 ) => {
   // fill in an array with unique numbers
   let trainAndValidationIndices = [];
@@ -98,13 +101,15 @@ const createDatasets = async (
 
   const trainAndValidationImages = [];
 
-  console.info("Loading train images...");
+  let count = 0;
   for (const trainClass of classes) {
     let load = [];
     const classFaces = trainData[trainClass];
     for (const i of trainAndValidationIndices) {
       const base64Face = classFaces[i];
       load.push(loadBase64Image(base64Face));
+      count++;
+      infoCallback(`Loading train images ${count}/${trainSize * classes.length}...`);
     }
     trainAndValidationImages.push(await Promise.all(load));
   }
@@ -148,6 +153,7 @@ const testModel = async (model,
                          epochs,
                          learningRate,
                          batchSize,
+                         infoCallback,
                          epochCallback) => {
   model.setLabels(classes);
   model.setSeed(SEED_WORD); // set a seed to shuffle predictably
@@ -157,14 +163,18 @@ const testModel = async (model,
 
   await tf.nextFrame().then(async () => {
     let index = 0;
-    console.info("Adding examples to the training model...");
+    let count = 0;
     for (const imgSet of trainAndValidationImages) {
       for (const img of imgSet) {
         await model.addExample(index, img);
+        count++;
+        infoCallback(
+          `Adding examples to the training model ${count}/${trainAndValidationImages.length * imgSet.length}...`
+        );
       }
       index++;
     }
-    console.info("Examples added");
+    infoCallback("Training a new model...");
     const start = window.performance.now();
     await model.train(
       {

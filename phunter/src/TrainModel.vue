@@ -5,7 +5,7 @@
         <TrainingModelInfo/>
         <div v-if="status === 'READY'" class="container">
           <div class="alert alert-secondary" role="alert">
-            <h4 class="alert-heading">Train new model</h4>
+            <h4 class="alert-heading">Train a new model</h4>
             <p>Please configure training parameters and click "Train" button.</p>
             <hr>
             <p class="mb-0">The result will be available at the end of the training.</p>
@@ -18,7 +18,7 @@
               Training {{currentEpoch}}/{{totalEpochs}} epoch
             </div>
           </div>
-          <div class="alert alert-primary" role="alert">Training a new model...</div>
+          <div class="alert alert-primary" role="alert">{{progressInfo}}</div>
         </div>
         <TrainingResults v-if="status === 'FINISHED'"
                          :results="classResults"
@@ -60,7 +60,8 @@ export default {
       validationAccuracy: null,
       classResults: [],
       status: "READY",
-      trainedModel: null
+      trainedModel: null,
+      progressInfo: "Preparing to train a new model..."
     }
   },
   computed: {
@@ -74,11 +75,15 @@ export default {
       this.status = "TRAINING";
       this.totalEpochs = event.epochs;
       this.currentEpoch = 0;
-      const dataSet = await getTrainModel();
       const epochCallback = () => {
         vueData.currentEpoch++;
       }
-      const trainResult = await trainModel(dataSet, event, epochCallback);
+      const infoCallback = (logInfo) => {
+        vueData.progressInfo = logInfo;
+        console.info(logInfo);
+      }
+      const dataSet = await getTrainModel(infoCallback);
+      const trainResult = await trainModel(dataSet, event, infoCallback, epochCallback);
       await this.calculateClassResults(trainResult.model);
       await this.showMetrics(trainResult.lastEpoch);
       this.status = "FINISHED";
