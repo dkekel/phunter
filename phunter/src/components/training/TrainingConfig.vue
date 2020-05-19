@@ -7,10 +7,6 @@
             </div>
             <form>
                 <div class="form-group col-md-12">
-                    <label for="model-size">Data set limit</label>
-                    <input type="number" class="form-control" id="model-size" v-model.number="dataSetSize">
-                </div>
-                <div class="form-group col-md-12">
                     <label for="epochs">Epochs</label>
                     <input type="number" class="form-control" id="epochs" v-model.number="epochs">
                 </div>
@@ -27,13 +23,9 @@
                     </select>
                 </div>
                 <div class="form-group col-md-12">
-                    <label for="learningRate">Epochs</label>
+                    <label for="learningRate">Learning rate</label>
                     <input type="number" step="0.00001" class="form-control" id="learningRate"
                            v-model.number="learningRate">
-                </div>
-                <div class="form-group col-md-12">
-                    <label for="testPercent">Test image percent</label>
-                    <input type="number" step="0.05" class="form-control" id="testPercent" v-model.number="testPercent">
                 </div>
                 <div class="form-group col-md-12">
                     <label for="alpha">Alpha</label>
@@ -45,6 +37,10 @@
                         <option :value="0.75">0.75</option>
                         <option :value="1">1</option>
                     </select>
+                </div>
+                <div class="form-group col-md-12">
+                    <label for="model-size">Data set limit</label>
+                    <input type="number" class="form-control" id="model-size" v-model.number="dataSetSize">
                 </div>
             </form>
             <div class="card-body">
@@ -67,7 +63,6 @@
         epochs: 200,
         batchSize: 128,
         learningRate: 0.00052,
-        testPercent: 0.1,
         alpha: 0.35
       }
     },
@@ -78,7 +73,6 @@
             epochs: this.epochs,
             batch: this.batchSize,
             rate: this.learningRate,
-            test: this.testPercent,
             alpha: this.alpha});
       }
     }

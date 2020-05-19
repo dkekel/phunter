@@ -29,7 +29,6 @@ const trainModel = async (trainData, trainingConfig, epochCallback) => {
   const epochs = trainingConfig.epochs;
   const learningRate = trainingConfig.rate;
   const batchSize = trainingConfig.batch;
-  const testPercent = trainingConfig.test;
 
   // 1. Setup dataset parameters
   const classLabels = ['pretty', 'notPretty'];
@@ -45,20 +44,16 @@ const trainModel = async (trainData, trainingConfig, epochCallback) => {
   if (NUM_IMAGE_PER_CLASS > minTrainData) {
     NUM_IMAGE_PER_CLASS = minTrainData;
   }
-  const TEST_IMAGES_SIZE = Math.ceil(NUM_IMAGE_PER_CLASS * testPercent);
-  const TRAIN_VALIDATION_SIZE_PER_CLASS = NUM_IMAGE_PER_CLASS - TEST_IMAGES_SIZE;
 
-  console.info(`train/validation size: ${TRAIN_VALIDATION_SIZE_PER_CLASS * classLabels.length}`);
+  console.info(`train/validation size: ${NUM_IMAGE_PER_CLASS * classLabels.length}`);
 
   // 2. Create our datasets once
   const datasets = await createDatasets(
     trainData,
     classLabels,
-    TRAIN_VALIDATION_SIZE_PER_CLASS,
-    TEST_IMAGES_SIZE
+    NUM_IMAGE_PER_CLASS
   );
   const trainAndValidationImages = datasets.trainAndValidationImages;
-  const testImages = datasets.testImages;
 
   // NOTE: If testing time, test first model twice because it takes longer
   // to train the very first time tf.js is training
@@ -78,8 +73,6 @@ const trainModel = async (trainData, trainingConfig, epochCallback) => {
     alpha,
     classLabels,
     trainAndValidationImages,
-    testImages,
-    TEST_IMAGES_SIZE,
     epochs,
     learningRate,
     batchSize,
@@ -94,19 +87,16 @@ const trainModel = async (trainData, trainingConfig, epochCallback) => {
 const createDatasets = async (
   trainData,
   classes,
-  trainSize,
-  testSize
+  trainSize
 ) => {
   // fill in an array with unique numbers
-  let listNumbers = [];
-  for (let i = 0; i < trainSize + testSize; ++i) listNumbers[i] = i;
-  listNumbers = fisherYates(listNumbers, seed); // shuffle
-
-  const trainAndValidationIndices = listNumbers.slice(0, trainSize);
-  const testIndices = listNumbers.slice(trainSize, trainSize + testSize);
+  let trainAndValidationIndices = [];
+  for (let i = 0; i < trainSize; ++i) {
+    trainAndValidationIndices[i] = i;
+  }
+  trainAndValidationIndices = fisherYates(trainAndValidationIndices, seed); // shuffle
 
   const trainAndValidationImages = [];
-  const testImages = [];
 
   console.info("Loading train images...");
   for (const trainClass of classes) {
@@ -117,19 +107,9 @@ const createDatasets = async (
       load.push(loadBase64Image(base64Face));
     }
     trainAndValidationImages.push(await Promise.all(load));
-
-    load = [];
-    for (const i of testIndices) {
-      const base64Face = classFaces[i];
-      load.push(loadBase64Image(base64Face));
-    }
-    testImages.push(await Promise.all(load));
   }
 
-  return {
-    trainAndValidationImages,
-    testImages
-  };
+  return {trainAndValidationImages};
 }
 
 const loadBase64Image = (bas64Image) => {
@@ -163,8 +143,6 @@ const testModel = async (model,
                          alpha,
                          classes,
                          trainAndValidationImages,
-                         testImages,
-                         testSizePerClass,
                          epochs,
                          learningRate,
                          batchSize,
