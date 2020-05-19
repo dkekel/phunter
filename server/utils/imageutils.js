@@ -12,9 +12,10 @@ const cropFaceImage = (folder, file, context) => {
   const destinationPath = `${folder}/faces/${file}`;
   fileUtils.createFolderIfMissing(folder, "faces");
   return new Promise(function (resolve, reject) {
+    const cropCoordinates = calculateCropCoordinated(context);
     clipper.image(sourcePath, function () {
-      this.crop(context._x, context._y, context._width, context._height)
-        .resize(null, context._height > FACE_IMAGE_SIZE ? FACE_IMAGE_SIZE : context._height)
+      this.crop(cropCoordinates.x, cropCoordinates.y, cropCoordinates.width, cropCoordinates.height)
+        .resize(FACE_IMAGE_SIZE, FACE_IMAGE_SIZE)
         .quality(90)
         .toFile(destinationPath, (error) => {
           if (error) {
@@ -27,6 +28,24 @@ const cropFaceImage = (folder, file, context) => {
     });
   });
 };
+
+const calculateCropCoordinated = (context) => {
+  const x = context._x;
+  const y = context._y;
+  const width = context._width;
+  const height = context._height;
+
+  const min = Math.min(width, height);
+  const scale = FACE_IMAGE_SIZE / min;
+  const scaledW = Math.ceil(width * scale);
+  const scaledH = Math.ceil(height * scale);
+  const dx = scaledW - FACE_IMAGE_SIZE;
+  const dy = scaledH - FACE_IMAGE_SIZE;
+  const xStart = x + ~~(dx / 2);
+  const yStart = y + ~~(dy / 2);
+
+  return {x: xStart / scale, y: yStart / scale, width: min, height: min};
+}
 
 const cropProfileImage = (folder, file) => {
   const photoPath = `${folder}/${file}`;

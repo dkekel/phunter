@@ -116,6 +116,8 @@ const loadBase64Image = (bas64Image) => {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
+    img.width = IMAGE_SIZE;
+    img.height = IMAGE_SIZE;
     img.src = `data:image/png;base64,${bas64Image}`;
     resolve(img);
   });
@@ -158,8 +160,7 @@ const testModel = async (model,
     console.info("Adding examples to the training model...");
     for (const imgSet of trainAndValidationImages) {
       for (const img of imgSet) {
-        const croppedImage = cropTo(img, IMAGE_SIZE);
-        await model.addExample(index, croppedImage);
+        await model.addExample(index, img);
       }
       index++;
     }
@@ -188,27 +189,6 @@ const testModel = async (model,
   showMetrics(alpha, time, logs);
   return logs[logs.length - 1];
 }
-
-const cropTo = (image, size, canvas = newCanvas()) => {
-
-  // image image, bitmap, or canvas
-  let width = image.width;
-  let height = image.height;
-
-  const min = Math.min(width, height);
-  const scale = size / min;
-  const scaledW = Math.ceil(width * scale);
-  const scaledH = Math.ceil(height * scale);
-  const dx = scaledW - size;
-  const dy = scaledH - size;
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(image, ~~(dx / 2) * -1, ~~(dy / 2) * -1, scaledW, scaledH);
-
-  return canvas;
-}
-
-const newCanvas = () => document.createElement('canvas');
 
 const showMetrics = (alpha, time, logs) => {
   const lastEpoch = logs[logs.length - 1];
