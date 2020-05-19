@@ -50,7 +50,7 @@ const calculateCropCoordinated = (context) => {
 const cropProfileImage = (folder, file) => {
   const photoPath = `${folder}/${file}`;
   return new Promise(function (resolve, reject) {
-    clipper.image(sourcePath, function () {
+    clipper.image(photoPath, function () {
       this.resize(null, PROFILE_IMAGE_SIZE)
         .quality(90)
         .toFile(photoPath, (error) => {
