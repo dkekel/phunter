@@ -1,4 +1,5 @@
 const express = require("express");
+const compression = require('compression');
 const cors = require("cors");
 const multer = require("multer");
 const bodyParser = require("body-parser");
@@ -16,6 +17,7 @@ app.use(express.static(path.join(__dirname, 'static')));
 app.use('/photos', express.static(path.join(__dirname, 'static/photos')));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(compression());
 
 app.listen(3000, async () => {
     await matcher.loadFaceModels();
