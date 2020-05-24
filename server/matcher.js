@@ -4,11 +4,15 @@ const faceApi = require("./recognition/faceapi");
 const fileUtils = require("./utils/fileutils");
 const repository = require("./api/repository");
 const imageUtils = require("./utils/imageutils");
+const seedrandom = require("seedrandom");
 
 const maxDistance = 300;
 const minPretty = 0.4;
 const superPretty = 0.8;
 const maxResults = 10;
+
+const SEED_WORD = "fobonaccigirls";
+const classLabels = ['pretty', 'notPretty'];
 
 const processFeed = async (token) => {
     api.setToken(token);
@@ -210,20 +214,81 @@ const extractReClassifiedProfiles = async (type) => {
     }
 };
 
-const getTrainingData = async () => {
+const getTrainingData = async (dataSetSize) => {
     const classModels = await repository.getVerifiedResults();
     let classASamples = [];
     let classBSamples = [];
     let result = await classModels.next()
     while (!!result) {
         if (result._id === true) {
-            classASamples.push(Buffer.from(result.faceSet, "base64"));
+            classASamples.push(result.faceSet);
         } else if (result._id === false) {
-            classBSamples.push(Buffer.from(result.faceSet, "base64"));
+            classBSamples.push(result.faceSet);
         }
         result = await classModels.next()
     }
-    return {pretty: classASamples, notPretty: classBSamples};
+
+    const dataSets = {pretty: classASamples, notPretty: classBSamples};
+    return shuffleAndLimitDataSize(dataSets, dataSetSize);
+}
+
+const shuffleAndLimitDataSize = (dataSets, dataSetSize) => {
+    const maxTrainData = Math.max(dataSets.pretty.length, dataSets.notPretty.length);
+    const minTrainData = Math.min(dataSets.pretty.length, dataSets.notPretty.length);
+
+    let imagePerClass = Math.ceil(maxTrainData / classLabels.length);
+    if (!!dataSetSize && maxTrainData > dataSetSize) {
+        imagePerClass = dataSetSize;
+    }
+
+    if (imagePerClass > minTrainData) {
+        imagePerClass = minTrainData;
+    }
+
+    console.info(`train size: ${imagePerClass * classLabels.length}`);
+
+    return createDataSets(dataSets, imagePerClass);
+}
+
+const createDataSets = (dataSets, imagePerClass) => {
+    // fill in an array with unique numbers
+    let trainAndValidationIndices = [];
+    for (let i = 0; i < imagePerClass; ++i) {
+        trainAndValidationIndices[i] = i;
+    }
+    trainAndValidationIndices = fisherYates(trainAndValidationIndices); // shuffle
+
+    const trainAndValidationImages = [];
+
+    for (const trainClass of classLabels) {
+        const load = [];
+        const classFaces = dataSets[trainClass];
+        for (const i of trainAndValidationIndices) {
+            load.push(classFaces[i]);
+        }
+        trainAndValidationImages.push(load);
+    }
+
+    return trainAndValidationImages;
+}
+
+const fisherYates = (array) => {
+    const seed = seedrandom(SEED_WORD);
+    const length = array.length;
+    const shuffled = array.slice(0);
+    for (let i = length - 1; i > 0; i -= 1) {
+        let randomIndex;
+        if (seed) {
+            randomIndex = Math.floor(seed() * (i + 1));
+        } else {
+            randomIndex = Math.floor(Math.random() * (i + 1));
+        }
+        [shuffled[i], shuffled[randomIndex]] = [
+            shuffled[randomIndex],
+            shuffled[i]
+        ];
+    }
+    return shuffled;
 }
 
 const getStoredModels = async () => {

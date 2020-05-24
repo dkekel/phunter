@@ -80,7 +80,7 @@ export default {
       const infoCallback = (logInfo) => {
         vueData.progressInfo = logInfo;
       }
-      const dataSet = await getTrainModel(infoCallback);
+      const dataSet = await getTrainModel(event.dataSetSize, infoCallback);
       trainModel(dataSet, event, infoCallback, epochCallback).then(trainResult => {
         this.showMetrics(trainResult.lastEpoch);
         this.classResults = trainResult.classResults;

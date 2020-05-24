@@ -80,7 +80,8 @@ app.get("/trainModelSize", cors(corsOptions), async (req, res, next) => {
 });
 
 app.get("/trainModel", cors(corsOptions), async (req, res, next) => {
-    const trainData = await matcher.getTrainingData();
+    const dataSetSize = Number(req.query.dataSetSize);
+    const trainData = await matcher.getTrainingData(dataSetSize);
     res.json(trainData);
 });
 

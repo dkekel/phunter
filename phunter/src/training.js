@@ -1,14 +1,10 @@
-import * as seedrandom from 'seedrandom';
-
-const SEED_WORD = "fobonaccigirls";
-const seed = seedrandom(SEED_WORD);
-
 const IMAGE_SIZE = 224;
 
-const getTrainModel = async (infoCallback) => {
+const getTrainModel = async (dataSetSize, infoCallback) => {
   return new Promise(resolve => {
     const request = new XMLHttpRequest();
-    request.open('GET', 'http://localhost:3000/trainModel', true);
+    const query = `?dataSetSize=${!!dataSetSize ? dataSetSize : Number.MAX_SAFE_INTEGER}`;
+    request.open('GET', `http://localhost:3000/trainModel${query}`, true);
     request.onload = async () => {
       const model = JSON.parse(request.response);
       resolve(model);
@@ -21,75 +17,37 @@ const getTrainModel = async (infoCallback) => {
 };
 
 const trainModel = async (trainData, trainingConfig, infoCallback, epochCallback) => {
-  const dataSetSize = trainingConfig.dataSetSize;
-
-  // 1. Setup dataset parameters
-  const classLabels = ['pretty', 'notPretty'];
-  trainingConfig.classLabels = classLabels;
-
-  const maxTrainData = Math.max(trainData[classLabels[0]].length, trainData[classLabels[1]].length);
-  const minTrainData = Math.min(trainData[classLabels[0]].length, trainData[classLabels[1]].length);
-
-  let NUM_IMAGE_PER_CLASS = Math.ceil(maxTrainData / classLabels.length);
-  if (!!dataSetSize && maxTrainData > dataSetSize) {
-    NUM_IMAGE_PER_CLASS = dataSetSize;
-  }
-
-  if (NUM_IMAGE_PER_CLASS > minTrainData) {
-    NUM_IMAGE_PER_CLASS = minTrainData;
-  }
-
-  console.info(`train size: ${NUM_IMAGE_PER_CLASS * classLabels.length}`);
-
-  // 2. Create our datasets once
-  const datasets = await createDatasets(
-    trainData,
-    classLabels,
-    NUM_IMAGE_PER_CLASS
-  );
-  const trainAndValidationImages = datasets.trainAndValidationImages;
-  return startBackgroundTraining(trainAndValidationImages, trainingConfig, infoCallback, epochCallback);
+  // Create our datasets once
+  const datasets = await createDatasets(trainData);
+  return startBackgroundTraining(datasets, trainingConfig, infoCallback, epochCallback);
 }
 
-const createDatasets = async (trainData, classes, trainSize) => {
-  // fill in an array with unique numbers
-  let trainAndValidationIndices = [];
-  for (let i = 0; i < trainSize; ++i) {
-    trainAndValidationIndices[i] = i;
-  }
-  trainAndValidationIndices = fisherYates(trainAndValidationIndices, seed); // shuffle
-
+const createDatasets = async (trainData) => {
   const trainAndValidationImages = [];
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
 
-  for (const trainClass of classes) {
-    let load = [];
-    const classFaces = trainData[trainClass];
-    for (const i of trainAndValidationIndices) {
-      const imageBuffer = classFaces[i];
-      load.push({data: new Uint8Array(imageBuffer.data), width: IMAGE_SIZE, height: IMAGE_SIZE});
+  for (const trainSamples of trainData) {
+    const load = [];
+    for (const imageBase64 of trainSamples) {
+      load.push(createImageData(imageBase64, context));
     }
     trainAndValidationImages.push(await Promise.all(load));
   }
 
-  return {trainAndValidationImages};
+  return trainAndValidationImages;
 }
 
-const fisherYates = (array, seed) => {
-  const length = array.length;
-  const shuffled = array.slice(0);
-  for (let i = length - 1; i > 0; i -= 1) {
-    let randomIndex;
-    if (seed) {
-      randomIndex = Math.floor(seed() * (i + 1));
-    } else {
-      randomIndex = Math.floor(Math.random() * (i + 1));
+const createImageData = (imageBase64, canvasContext) => {
+  return new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => {
+      canvasContext.drawImage(image, 0, 0);
+      const imageData = canvasContext.getImageData(0, 0, IMAGE_SIZE, IMAGE_SIZE);
+      resolve(imageData);
     }
-    [shuffled[i], shuffled[randomIndex]] = [
-      shuffled[randomIndex],
-      shuffled[i]
-    ];
-  }
-  return shuffled;
+    image.src = `data:image/png;base64,${imageBase64}`;
+  });
 }
 
 const startBackgroundTraining = (trainingDataset, trainingConfig, infoCallback, epochCallback) => {
