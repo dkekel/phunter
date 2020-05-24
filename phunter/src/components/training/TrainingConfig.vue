@@ -60,6 +60,7 @@
     data() {
       return {
         dataSetSize: null,
+        classLabels: ['pretty', 'notPretty'],
         epochs: 200,
         batchSize: 128,
         learningRate: 0.00052,
@@ -70,6 +71,7 @@
       trainModel() {
         this.$emit('start-training',
           {dataSetSize: this.dataSetSize,
+            classLabels: this.classLabels,
             epochs: this.epochs,
             batch: this.batchSize,
             rate: this.learningRate,
