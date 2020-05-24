@@ -1,11 +1,8 @@
 import * as seedrandom from 'seedrandom';
-import * as tf from '@tensorflow/tfjs';
-import * as tmImage from '@teachablemachine/image';
 
 const SEED_WORD = "fobonaccigirls";
 const seed = seedrandom(SEED_WORD);
 
-const MOBILENET_VERSION = 2;
 const IMAGE_SIZE = 224;
 
 const getTrainModel = async (infoCallback) => {
@@ -25,13 +22,10 @@ const getTrainModel = async (infoCallback) => {
 
 const trainModel = async (trainData, trainingConfig, infoCallback, epochCallback) => {
   const dataSetSize = trainingConfig.dataSetSize;
-  const alpha = trainingConfig.alpha;
-  const epochs = trainingConfig.epochs;
-  const learningRate = trainingConfig.rate;
-  const batchSize = trainingConfig.batch;
 
   // 1. Setup dataset parameters
   const classLabels = ['pretty', 'notPretty'];
+  trainingConfig.classLabels = classLabels;
 
   const maxTrainData = Math.max(trainData[classLabels[0]].length, trainData[classLabels[1]].length);
   const minTrainData = Math.min(trainData[classLabels[0]].length, trainData[classLabels[1]].length);
@@ -51,47 +45,13 @@ const trainModel = async (trainData, trainingConfig, infoCallback, epochCallback
   const datasets = await createDatasets(
     trainData,
     classLabels,
-    NUM_IMAGE_PER_CLASS,
-    infoCallback
+    NUM_IMAGE_PER_CLASS
   );
   const trainAndValidationImages = datasets.trainAndValidationImages;
-
-  // NOTE: If testing time, test first model twice because it takes longer
-  // to train the very first time tf.js is training
-
-  const lineStart = "\n//====================================";
-  const lineEnd = "====================================//\n\n";
-  console.log(lineStart);
-  // 3. Test data on the model
-  const teachableMobileNetV2 = await tmImage.createTeachable(
-    {tfjsVersion: tmImage.version.tfjs},
-    {version: MOBILENET_VERSION, alpha: alpha}
-  );
-
-
-  const lastEpoch = await testModel(
-    teachableMobileNetV2,
-    alpha,
-    classLabels,
-    trainAndValidationImages,
-    epochs,
-    learningRate,
-    batchSize,
-    infoCallback,
-    epochCallback
-  );
-
-  console.log(lineEnd);
-
-  return {model: teachableMobileNetV2, lastEpoch};
+  return startBackgroundTraining(trainAndValidationImages, trainingConfig, infoCallback, epochCallback);
 }
 
-const createDatasets = async (
-  trainData,
-  classes,
-  trainSize,
-  infoCallback
-) => {
+const createDatasets = async (trainData, classes, trainSize) => {
   // fill in an array with unique numbers
   let trainAndValidationIndices = [];
   for (let i = 0; i < trainSize; ++i) {
@@ -101,31 +61,17 @@ const createDatasets = async (
 
   const trainAndValidationImages = [];
 
-  let count = 0;
   for (const trainClass of classes) {
     let load = [];
     const classFaces = trainData[trainClass];
     for (const i of trainAndValidationIndices) {
-      const base64Face = classFaces[i];
-      load.push(loadBase64Image(base64Face));
-      count++;
-      infoCallback(`Loading train images ${count}/${trainSize * classes.length}...`);
+      const imageBuffer = classFaces[i];
+      load.push({data: new Uint8Array(imageBuffer.data), width: IMAGE_SIZE, height: IMAGE_SIZE});
     }
     trainAndValidationImages.push(await Promise.all(load));
   }
 
   return {trainAndValidationImages};
-}
-
-const loadBase64Image = (bas64Image) => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.width = IMAGE_SIZE;
-    img.height = IMAGE_SIZE;
-    img.src = `data:image/png;base64,${bas64Image}`;
-    resolve(img);
-  });
 }
 
 const fisherYates = (array, seed) => {
@@ -146,66 +92,32 @@ const fisherYates = (array, seed) => {
   return shuffled;
 }
 
-const testModel = async (model,
-                         alpha,
-                         classes,
-                         trainAndValidationImages,
-                         epochs,
-                         learningRate,
-                         batchSize,
-                         infoCallback,
-                         epochCallback) => {
-  model.setLabels(classes);
-  model.setSeed(SEED_WORD); // set a seed to shuffle predictably
-
-  const logs = [];
-  let time = 0;
-
-  await tf.nextFrame().then(async () => {
-    let index = 0;
-    let count = 0;
-    for (const imgSet of trainAndValidationImages) {
-      for (const img of imgSet) {
-        await model.addExample(index, img);
-        count++;
-        infoCallback(
-          `Adding examples to the training model ${count}/${trainAndValidationImages.length * imgSet.length}...`
-        );
+const startBackgroundTraining = (trainingDataset, trainingConfig, infoCallback, epochCallback) => {
+  return new Promise(resolve => {
+    const blob = new Blob([`importScripts('http://localhost:3000/train');`],
+      { "type": 'application/javascript' });
+    const url = window.URL || window.webkitURL;
+    const blobUrl = url.createObjectURL(blob);
+    const trainWorker = new Worker(blobUrl);
+    trainWorker.postMessage({trainingDataset: trainingDataset, trainingConfig: trainingConfig});
+    trainWorker.onmessage = (message) => {
+      const data = message.data;
+      const status = data.status;
+      switch (status) {
+        case "PREPARING":
+          infoCallback(data.info);
+          break;
+        case "TRAINING":
+          epochCallback(data.info);
+          break;
+        case "FINISHED":
+          resolve(data.result);
+          break;
+        default:
+          console.error("Undefined Web Worker status");
       }
-      index++;
     }
-    infoCallback("Training a new model...");
-    const start = window.performance.now();
-    await model.train(
-      {
-        denseUnits: 100,
-        epochs,
-        learningRate,
-        batchSize
-      },
-      {
-        onEpochBegin: async (epoch, logs) => {
-        },
-        onEpochEnd: async (epoch, log) => {
-          epochCallback(log);
-          logs.push(log);
-        }
-      }
-    );
-    const end = window.performance.now();
-    time = end - start;
   });
-
-  showMetrics(alpha, time, logs);
-  return logs[logs.length - 1];
-}
-
-const showMetrics = (alpha, time, logs) => {
-  const lastEpoch = logs[logs.length - 1];
-  const header = "α=" + alpha + ", t=" + (time / 1000).toFixed(1) + "s";
-  console.info(`Result: ${header}`);
-  console.info(`Train: accuracy ${lastEpoch.acc.toFixed(3)}, loss ${lastEpoch.loss.toFixed(5)}`);
-  console.info(`Validation: accuracy ${lastEpoch.val_acc.toFixed(3)}, loss ${lastEpoch.val_loss.toFixed(5)}`);
 }
 
 export {getTrainModel, trainModel}

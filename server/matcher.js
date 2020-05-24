@@ -217,9 +217,9 @@ const getTrainingData = async () => {
     let result = await classModels.next()
     while (!!result) {
         if (result._id === true) {
-            classASamples.push(result.faceSet);
+            classASamples.push(Buffer.from(result.faceSet, "base64"));
         } else if (result._id === false) {
-            classBSamples.push(result.faceSet);
+            classBSamples.push(Buffer.from(result.faceSet, "base64"));
         }
         result = await classModels.next()
     }

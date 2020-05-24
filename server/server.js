@@ -28,8 +28,8 @@ app.get("/", (req, res, next) => {
     res.sendFile(`${__dirname}/html/mentor.html`);
 });
 
-app.get("/train", (req, res, next) => {
-    res.sendFile(`${__dirname}/html/trainer.html`);
+app.get("/train", cors(corsOptions), (req, res, next) => {
+    res.sendFile(`${__dirname}/static/train-model.js`);
 });
 
 app.get("/results", cors(corsOptions), async (req, res, next) => {

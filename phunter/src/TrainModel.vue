@@ -43,7 +43,6 @@ import TrainingResults from "./components/training/TrainingResults";
 import TrainingConfig from "./components/training/TrainingConfig";
 import {getTrainModel, trainModel} from "./training";
 import axios from 'axios';
-import {metrics} from "@tensorflow/tfjs-vis";
 import TrainedModels from "./components/training/TrainedModels";
 import TrainingModelInfo from "./components/training/TrainingModelInfo";
 
@@ -60,7 +59,7 @@ export default {
       validationAccuracy: null,
       classResults: [],
       status: "READY",
-      trainedModel: null,
+      modelName: null,
       progressInfo: "Preparing to train a new model..."
     }
   },
@@ -82,15 +81,12 @@ export default {
         vueData.progressInfo = logInfo;
       }
       const dataSet = await getTrainModel(infoCallback);
-      const trainResult = await trainModel(dataSet, event, infoCallback, epochCallback);
-      await this.calculateClassResults(trainResult.model);
-      await this.showMetrics(trainResult.lastEpoch);
-      this.status = "FINISHED";
-      this.trainedModel = trainResult.model;
-    },
-    async calculateClassResults(model) {
-      const accuracyTensors = await model.calculateAccuracyPerClass();
-      this.classResults = await metrics.perClassAccuracy(accuracyTensors.reference, accuracyTensors.predictions);
+      trainModel(dataSet, event, infoCallback, epochCallback).then(trainResult => {
+        this.showMetrics(trainResult.lastEpoch);
+        this.classResults = trainResult.classResults;
+        this.modelName = trainResult.modelName;
+        this.status = "FINISHED";
+      });
     },
     showMetrics (lastEpoch) {
       this.totalAccuracy = lastEpoch.acc.toFixed(3);
@@ -98,21 +94,15 @@ export default {
       this.validationAccuracy = lastEpoch.val_acc.toFixed(3);
     },
     async saveModel() {
-      const saveResult = await this.trainedModel.save('http://localhost:3000/saveModel');
-      const response = saveResult.responses[0];
-      if (response.status === 200) {
-        const responseBody = await response.json();
-        await axios
-                .post('http://localhost:3000/saveModelMetadata', {
-                  name: responseBody.modelName,
-                  totalAccuracy: this.totalAccuracy,
-                  validationAccuracy: this.validationAccuracy,
-                  classResults: this.classResults
-                })
-                .then(() => this.savedModelsVer++);
-      } else {
-        console.error("Failed to save model!");
-      }
+      const storedModelName = this.modelName;
+      await axios
+              .post('http://localhost:3000/saveModelMetadata', {
+                name: storedModelName,
+                totalAccuracy: this.totalAccuracy,
+                validationAccuracy: this.validationAccuracy,
+                classResults: this.classResults
+              })
+              .then(() => this.savedModelsVer++);
     }
   }
 }
