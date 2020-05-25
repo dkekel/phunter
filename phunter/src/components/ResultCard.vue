@@ -18,8 +18,8 @@
         </div>
         <div class="card-footer">
             <div class="btn-group w-100" role="group" aria-label="User Input">
-                <button type="button" class="btn btn-sm btn-success" @click="markPretty">Pretty</button>
                 <button type="button" class="btn btn-sm btn-danger" @click="markNotPretty">Not Pretty</button>
+                <button type="button" class="btn btn-sm btn-success" @click="markPretty">Pretty</button>
             </div>
         </div>
     </div>
