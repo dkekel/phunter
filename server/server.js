@@ -35,16 +35,17 @@ app.get("/results", async (req, res, next) => {
     res.json(results);
 });
 
-app.get("/feed", async (req, res, next) => {
+app.post("/feed", async (req, res, next) => {
     const apiToken = req.header('Api-Token');
-    const userList = await matcher.processFeed(apiToken);
+    const config = req.body;
+    const userList = await matcher.processFeed(config, apiToken);
     res.json({users: userList});
 });
 
 app.post("/categorize", async (req, res, next) => {
     const apiToken = req.header('Api-Token');
     const reqBody = req.body;
-    const userResult = await matcher.categorizeUser(reqBody.result, reqBody.user, apiToken);
+    const userResult = await matcher.categorizeUser(reqBody.result, reqBody.user, reqBody.config, apiToken);
     res.json({userScore: userResult});
 });
 

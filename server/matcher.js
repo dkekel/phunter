@@ -6,16 +6,13 @@ const repository = require("./api/repository");
 const imageUtils = require("./utils/imageutils");
 const seedrandom = require("seedrandom");
 
-const maxDistance = 300;
-const minPretty = 0.4;
-const superPretty = 0.8;
-const maxResults = 10;
-
 const SEED_WORD = "fobonaccigirls";
 const classLabels = ['pretty', 'notPretty'];
 
-const processFeed = async (token) => {
+const processFeed = async (config, token) => {
     api.setToken(token);
+    const maxDistance = config.maxDistance;
+    const maxResults = config.maxResults;
     const results = await fetchProfiles();
     const feedProfiles = [];
     if (results !== undefined) {
@@ -23,7 +20,7 @@ const processFeed = async (token) => {
         const limitedResults = utils.limitResults(results, maxResults);
 
         await fileUtils.cleanTempData();
-        const iterationResults = await iterateResults(limitedResults);
+        const iterationResults = await iterateResults(limitedResults, maxDistance);
         try {
             for (let userResult of iterationResults) {
                 //If no faces were identified, the promise returns undefined
@@ -44,7 +41,7 @@ const fetchProfiles = async () => {
     return json.data.results;
 };
 
-const iterateResults = async (results) => {
+const iterateResults = async (results, maxDistance) => {
     const userIterationPromises = [];
     for (let userObject of results) {
         const userProcessPromise = new Promise(async resolve => {
@@ -101,7 +98,9 @@ const extractFaces = async (userId) => {
     return {facesCount: facesCount, faces: faceImages};
 };
 
-const categorizeUser = async (profileResults, user, token) => {
+const categorizeUser = async (profileResults, user, config, token) => {
+    const minPretty = config.minPretty;
+    const superPretty = config.superPretty;
     let prettySum = 0;
     let photosCount = 0;
     let finalPrediction = 0;
@@ -137,12 +136,12 @@ const categorizeUser = async (profileResults, user, token) => {
         }
         await imageUtils.cropProfileImage(user, userPhoto);
         const profilePhoto = imageUtils.getPhotoBase64(userPhoto, user);
-        await storeProcessedUser(user, profilePhoto, userFaces, finalPrediction);
+        await storeProcessedUser(user, profilePhoto, userFaces, finalPrediction, minPretty);
     }
     return finalPrediction;
 };
 
-const storeProcessedUser = async (userId, userPhoto, userFaces, userScore) => {
+const storeProcessedUser = async (userId, userPhoto, userFaces, userScore, minPretty) => {
     const userData = {
         user: userId,
         photo: userPhoto,

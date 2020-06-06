@@ -35,7 +35,10 @@
                 </div>
             </div>
             <div class="col">
-                <MatcherConfig v-on:start-hunt="hunt" v-on:stop-hunt="stopHunt"/>
+                <MatcherConfig
+                        v-on:update-config="updateConfig"
+                        v-on:start-hunt="hunt"
+                        v-on:stop-hunt="stopHunt"/>
             </div>
         </div>
     </div>
@@ -63,6 +66,7 @@
       return {
         model: null,
         maxPredictions: 0,
+        config: null,
         profiles: [],
         thumbnails: [],
         result: [],
@@ -114,6 +118,9 @@
       getTimestamp() {
         return new Date().toLocaleString();
       },
+      updateConfig(config) {
+        this.config = config;
+      },
       async hunt() {
         this.result = [];
         this.thumbnails = [];
@@ -130,7 +137,7 @@
         this.feedProcessed = true;
       },
       async loadProfiles() {
-        const response = await axios.get("http://localhost:3000/feed",
+        const response = await axios.post("http://localhost:3000/feed", this.config,
           {headers: {"Api-Token": this.apiToken}});
         this.profiles = response.data.users;
         this.appendFeedSizeLog(this.profiles.length);
@@ -152,7 +159,7 @@
             );
           });
         }
-        await this.categorizeResult({user: userId, result: this.result}, userName);
+        await this.categorizeResult({user: userId, result: this.result, config: this.config}, userName);
       },
       setImageForRecognition(userId, image) {
         return new Promise(resolve => {
