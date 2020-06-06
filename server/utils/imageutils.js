@@ -45,7 +45,7 @@ const calculateCropCoordinated = (context) => {
   const xStart = x + ~~(dx / 2);
   const yStart = y + ~~(dy / 2);
 
-  return {x: xStart / scale, y: yStart / scale, width: min, height: min};
+  return {x: xStart, y: yStart, width: min, height: min};
 }
 
 const cropProfileImage = (folder, file) => {
