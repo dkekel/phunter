@@ -9,6 +9,10 @@ const removeFolder = async (folder) => {
     await rimraf.sync(`${photosPath}/${folder}`)
 };
 
+const getFile = (filePath) => {
+    return fs.readFileSync(filePath);
+}
+
 const createFolderIfMissing = (path, newFolder) => {
     const newFolderPath = `${path}/${newFolder}`;
     if (!fs.existsSync(newFolderPath)) {
@@ -84,5 +88,5 @@ const cleanTempData = async () => {
     }
 };
 
-module.exports = {getImageURLs, getStoredFeed, getUserPhotos, getUserPhotosFolder, getFaceImage, getProfileImage,
-    writeBase64Image, saveTrainedModel, createFolderIfMissing, removeFolder, cleanTempData};
+module.exports = {getFile, getImageURLs, getStoredFeed, getUserPhotos, getUserPhotosFolder, getFaceImage, getProfileImage,
+    writeBase64Image, saveTrainedModel, createFolderIfMissing, removeFolder, cleanTempData, photosPath};

@@ -34,20 +34,23 @@ const loadModels = async () => {
 
 const processFile = (folder, file) => {
     return new Promise(async (resolve, reject) => {
-        let faceFound = false;
         try {
+            let faceFound = false;
+            let croppedFace;
             const photo = await canvas.loadImage(`${folder}/${file}`);
             const faceDescriptors = await faceApi.detectSingleFace(photo);
             if (faceDescriptors !== undefined) {
                 const faceScore = faceDescriptors._score;
                 const faceBox = faceDescriptors._box;
                 if (faceScore > minFaceScore && isMinFaceSize(faceBox)) {
-                    await imageUtils.cropFaceImage(folder, file, faceBox)
+                    croppedFace = await imageUtils.cropFaceImage(folder, file, faceBox)
                         .catch((error) => console.error(`Face was not cropped ${error}`));
-                    faceFound = true;
+                    if (!!croppedFace) {
+                        faceFound = true;
+                    }
                 }
             }
-            resolve(faceFound);
+            resolve({faceFound: faceFound, faceImage: croppedFace, imageFile: file});
         } catch (e) {
             console.error(`Skipping ${folder}/${file} due to recognition error: ${e}`);
             reject();

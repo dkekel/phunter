@@ -52,13 +52,13 @@ const iterateResults = async (results) => {
             const userId = user._id;
             const distance = userObject.distance_mi;
             await downloadPhotos(user);
-            const facesCount = await extractFaces(userId);
-            if (facesCount > 0 && distance < maxDistance) {
-                const userProcessResult = {userId: userId, userName: user.name};
+            const extractedFaces = await extractFaces(userId);
+            if (extractedFaces.facesCount > 0 && distance < maxDistance) {
+                const userProcessResult = {userId: userId, userName: user.name, faces: extractedFaces.faces};
                 resolve(userProcessResult);
             } else {
                 //If no faces for a given profile, we don't want to see it again
-                const reason = `${facesCount} faces; distance ${distance}`;
+                const reason = `${extractedFaces.facesCount} faces; distance ${distance}`;
                 await api.rejectProfile(userId, reason);
                 resolve(undefined);
             }
@@ -86,20 +86,22 @@ const extractFaces = async (userId) => {
     const recognitionResult = await faceApi.recognizeFaces(photosFolder, photoFiles)
         .catch((error) => console.log(`Failed to extract face ${error}`));
     let facesCount = 0;
+    const faceImages = [];
     try {
         for (let filePromise of recognitionResult) {
-            const faceFound = await filePromise;
-            if (faceFound) {
+            const faceResult = await filePromise;
+            if (faceResult.faceFound) {
                 facesCount++;
+                faceImages.push({face: faceResult.faceImage, file: faceResult.imageFile});
             }
         }
     } catch (e) {
         console.error(`No faces detected for ${userId}`);
     }
-    return facesCount;
+    return {facesCount: facesCount, faces: faceImages};
 };
 
-const categorizeUser = async (prediction, user, token) => {
+const categorizeUser = async (profileResults, user, token) => {
     let prettySum = 0;
     let photosCount = 0;
     let finalPrediction = 0;
@@ -107,18 +109,17 @@ const categorizeUser = async (prediction, user, token) => {
     let userPhoto;
     const userFaces = [];
     api.setToken(token);
-    for (let key in prediction) {
+    for (let result of profileResults) {
         photosCount++;
-        userPhoto = key;
 
-        const faceBase64 = imageUtils.getFaceBase64(key, user);
-        const photoResult = prediction[key];
+        const faceBase64 = result.face;
+        const photoResult = result.prediction;
         const prettyProbability = photoResult[0].probability;
 
         userFaces.push(faceBase64);
         if (prettyProbability > maxPrediction) {
             maxPrediction = prettyProbability;
-            userPhoto = key;
+            userPhoto = result.file;
         }
         if (prettyProbability >= minPretty) {
             prettySum += prettyProbability;
@@ -134,7 +135,7 @@ const categorizeUser = async (prediction, user, token) => {
             const reason = `final prediction ${finalPrediction}`;
             await api.rejectProfile(user, reason);
         }
-        await imageUtils.cropProfileImage(userPhoto, user);
+        await imageUtils.cropProfileImage(user, userPhoto);
         const profilePhoto = imageUtils.getPhotoBase64(userPhoto, user);
         await storeProcessedUser(user, profilePhoto, userFaces, finalPrediction);
     }

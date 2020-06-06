@@ -22,7 +22,8 @@ const cropFaceImage = (folder, file, context) => {
             console.error(`Failed to crop ${sourcePath}. Reason: ${error}`);
             reject(error);
           } else {
-            resolve();
+            const faceImage = fileUtils.getFile(destinationPath);
+            resolve(faceImage.toString("base64"));
           }
         });
     });
@@ -48,7 +49,7 @@ const calculateCropCoordinated = (context) => {
 }
 
 const cropProfileImage = (folder, file) => {
-  const photoPath = `${folder}/${file}`;
+  const photoPath = `${fileUtils.photosPath}/${folder}/${file}`;
   return new Promise(function (resolve, reject) {
     clipper.image(photoPath, function () {
       this.resize(null, PROFILE_IMAGE_SIZE)
