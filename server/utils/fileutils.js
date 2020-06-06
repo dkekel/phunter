@@ -26,7 +26,6 @@ const getUserPhotosFolder = (userId) => {
 
 const getFaceImage = (photoId, userId) => {
     return fs.readFileSync(`${photosPath}/${userId}/faces/${photoId}`);
-
 }
 
 const getProfileImage = (photoId, userId) => {
@@ -82,7 +81,7 @@ const cleanTempData = async () => {
     const tempFolders = await fs.readdirSync(photosPath);
     for (let folder of tempFolders) {
         if (folder !== 'liked' && folder !== 'pretty' && folder !== 'notpretty') {
-            await fileUtils.removeFolder(folder)
+            await removeFolder(folder)
               .catch((error) => console.error(`Failed to remove ${folder}. Reason: ${error}`));
         }
     }
