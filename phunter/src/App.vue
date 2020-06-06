@@ -8,7 +8,7 @@
 
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav mr-auto">
-                    <li class="nav-item active">
+                    <li class="nav-item">
                         <router-link class="nav-link" :to="{name: 'matcher', params: {apiToken: apiToken}}">Matcher
                         </router-link>
                     </li>
