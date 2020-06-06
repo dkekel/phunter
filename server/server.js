@@ -1,38 +1,33 @@
 const express = require("express");
 const compression = require('compression');
-const cors = require("cors");
 const multer = require("multer");
 const bodyParser = require("body-parser");
 const path = require("path");
 const fileUtils = require("./utils/fileutils");
 const matcher = require("./matcher");
 
-const corsOptions = {
-    origin: 'http://localhost:8080',
-    optionsSuccessStatus: 200
-}
 const upload = multer({dest: path.join(__dirname, 'uploads/')});
 const app = express();
 app.use(express.static(path.join(__dirname, 'static')));
-app.use('/photos', express.static(path.join(__dirname, 'static/photos')));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(compression());
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "http://localhost:8080"); // update to match the domain you will make the request from
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Api-Token");
+    next();
+});
 
 app.listen(3000, async () => {
     await matcher.loadFaceModels();
     console.info("Server running on port 3000");
 });
 
-app.get("/", (req, res, next) => {
-    res.sendFile(`${__dirname}/html/mentor.html`);
-});
-
-app.get("/train", cors(corsOptions), (req, res, next) => {
+app.get("/train", (req, res, next) => {
     res.sendFile(`${__dirname}/static/train-model.js`);
 });
 
-app.get("/results", cors(corsOptions), async (req, res, next) => {
+app.get("/results", async (req, res, next) => {
     const pageSize = Number(req.query.size);
     const offset = Number(req.query.offset);
     const prettyFlag = req.query.classType === 'pretty';
@@ -46,12 +41,6 @@ app.get("/feed", async (req, res, next) => {
     res.json({users: userList});
 });
 
-app.get("/images/:userId", async (req, res, next) => {
-    const userId = req.params.userId;
-    const images = await fileUtils.getImageURLs(userId);
-    res.json({images: images});
-});
-
 app.post("/categorize", async (req, res, next) => {
     const apiToken = req.header('Api-Token');
     const reqBody = req.body;
@@ -59,38 +48,36 @@ app.post("/categorize", async (req, res, next) => {
     res.json({userScore: userResult});
 });
 
-app.options('/markPretty', cors(corsOptions));
-app.post("/markPretty", cors(corsOptions), async (req, res, next) => {
+app.post("/markPretty", async (req, res, next) => {
     const reqBody = req.body;
     const apiToken = req.header('Api-Token');
     const result = await matcher.updateUserProfileSelection(reqBody, apiToken);
     res.json(result);
 });
 
-app.options('/markAllProcessed', cors(corsOptions));
-app.post("/markAllProcessed", cors(corsOptions), async (req, res, next) => {
+app.post("/markAllProcessed", async (req, res, next) => {
     const pretty = req.body.pretty;
     const result = await matcher.markAllProcessed(pretty);
     res.json(result);
 });
 
-app.get("/trainModelSize", cors(corsOptions), async (req, res, next) => {
+app.get("/trainModelSize", async (req, res, next) => {
     const trainDataSizes = await matcher.getTrainDataSizePerClass();
     res.json(trainDataSizes);
 });
 
-app.get("/trainModel", cors(corsOptions), async (req, res, next) => {
+app.get("/trainModel", async (req, res, next) => {
     const dataSetSize = Number(req.query.dataSetSize);
     const trainData = await matcher.getTrainingData(dataSetSize);
     res.json(trainData);
 });
 
-app.get("/storedModels", cors(corsOptions), async (req, res, next) => {
+app.get("/storedModels", async (req, res, next) => {
     const models = await matcher.getStoredModels();
     res.json(models);
 });
 
-app.post("/saveModel", cors(corsOptions), upload.any(), async (req, res, next) => {
+app.post("/saveModel", upload.any(), async (req, res, next) => {
     const files = req.files;
     const modelFolder = Date.now();
     for (let file of files) {
@@ -99,14 +86,13 @@ app.post("/saveModel", cors(corsOptions), upload.any(), async (req, res, next) =
     res.json({modelName: modelFolder});
 });
 
-app.options('/saveModelMetadata', cors(corsOptions));
-app.post("/saveModelMetadata", cors(corsOptions), async (req, res, next) => {
+app.post("/saveModelMetadata", async (req, res, next) => {
     const modelMetadata = req.body;
     await matcher.storeTrainedModelMetadata(modelMetadata);
     res.json({status: "ok"});
 });
 
-app.get("/extractClassified", cors(corsOptions), async (req, res, next) => {
+app.get("/extractClassified", async (req, res, next) => {
     const type = req.query.type;
     await matcher.extractReClassifiedProfiles(type);
     res.json({status: "ok"});
