@@ -2,7 +2,7 @@
     <div class="container">
         <div class="alert alert-primary" role="alert">
             Available data sets:
-            <div class="btn-group" role="group" aria-label="Basic example">
+            <div class="btn-group" role="group" aria-label="Model data">
               <span class="btn btn-sm btn-info disabled">
                 Pretty <span class="badge badge-light">{{prettyDataSize}}</span>
               </span>
