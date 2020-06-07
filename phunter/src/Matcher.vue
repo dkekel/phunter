@@ -2,6 +2,7 @@
     <div class="container">
         <div class="row">
             <div class="col-8">
+                <TinderData v-bind:likes-info="likesInfo"/>
                 <div class="container">
                     <div class="text-center">
                         <div id="label-container" class="alert alert-info">
@@ -49,6 +50,7 @@
   import * as tf from "@tensorflow/tfjs";
   import * as tmImage from "@teachablemachine/image";
   import MatcherConfig from "./components/MatcherConfig";
+  import TinderData from "./components/TinderData";
 
   const URL = "https://teachablemachine.withgoogle.com/models/8mc6xcvVm/";
   const modelURL = URL + "model.json";
@@ -58,7 +60,7 @@
 
   export default {
     name: "Matcher",
-    components: {MatcherConfig},
+    components: {TinderData, MatcherConfig},
     props: {
       apiToken: String
     },
@@ -73,7 +75,8 @@
         totalScore: [],
         logs: [],
         started: false,
-        feedProcessed: false
+        feedProcessed: false,
+        likesInfo: {}
       }
     },
     mounted() {
@@ -85,7 +88,7 @@
     },
     watch: {
       feedProcessed: function (val, oldVal) {
-        if (!oldVal && val && this.started) {
+        if (!oldVal && val && this.started && this.hasLikes()) {
           this.hunt();
         }
       }
@@ -121,20 +124,29 @@
       updateConfig(config) {
         this.config = config;
       },
+      hasLikes() {
+        return this.likesCount > 0;
+      },
       async hunt() {
         this.result = [];
         this.thumbnails = [];
         this.started = true;
         this.feedProcessed = false;
         this.appendFeedLoadingLog();
+        await this.getRemainingLikes();
         await this.loadProfiles();
-        while (this.started && this.profiles.length > 0) {
+        while (this.started && this.profiles.length > 0 && this.hasLikes()) {
           const profile = this.profiles.pop();
           await this.analyzeProfile(profile);
           this.thumbnails = [];
           this.result = [];
         }
         this.feedProcessed = true;
+      },
+      async getRemainingLikes() {
+        const response = await axios.get("http://localhost:3000/likes",
+          {headers: {"Api-Token": this.apiToken}});
+        this.likesInfo = response.data.likesInfo;
       },
       async loadProfiles() {
         const response = await axios.post("http://localhost:3000/feed", this.config,

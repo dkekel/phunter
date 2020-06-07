@@ -23,6 +23,12 @@ app.listen(3000, async () => {
     console.info("Server running on port 3000");
 });
 
+app.get("/likes", async (req, res, next) => {
+    const apiToken = req.header('Api-Token');
+    const likesInfo = await matcher.getLikesInfo(apiToken);
+    res.json({likesInfo: likesInfo});
+});
+
 app.get("/train", (req, res, next) => {
     res.sendFile(`${__dirname}/static/train-model.js`);
 });

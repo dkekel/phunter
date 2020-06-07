@@ -9,6 +9,11 @@ const seedrandom = require("seedrandom");
 const SEED_WORD = "fobonaccigirls";
 const classLabels = ['pretty', 'notPretty'];
 
+const getLikesInfo = async (token) => {
+    api.setToken(token);
+    return api.getLikesInfo();
+}
+
 const processFeed = async (config, token) => {
     api.setToken(token);
     const maxDistance = config.maxDistance;
@@ -36,9 +41,14 @@ const processFeed = async (config, token) => {
 };
 
 const fetchProfiles = async () => {
-    const response = await api.getFeed();
-    const json = await response.json();
-    return json.data.results;
+    const likesInfo = await api.getLikesInfo();
+    if (likesInfo.likes > 0) {
+        const response = await api.getFeed();
+        const json = await response.json();
+        return json.data.results;
+    }
+    console.warn(`Skipping feed load. Likes left: ${likesInfo.likes}`);
+    return [];
 };
 
 const iterateResults = async (results, maxDistance) => {
@@ -302,6 +312,7 @@ const storeTrainedModelMetadata = async (modelMeta) => {
 
 module.exports = {
     loadFaceModels,
+    getLikesInfo,
     processFeed,
     getUnverifiedProfiles,
     getTrainingData,

@@ -6,7 +6,7 @@ let apiToken;
 let setToken = (token) => apiToken = token;
 
 let getProfile = async () => await fetch(
-    apiUrl + '/v2/profile?include=account,super_likes',
+    apiUrl + '/v2/profile?include=account,likes,super_likes',
     {headers: {'X-Auth-Token': apiToken}}
 );
 
@@ -33,6 +33,14 @@ let likeProfile = async (userId, superLike) => {
     } catch (error) {
         console.error(`Error liking user ${userId}; Reason: ${error}`)
     }
+};
+
+const getLikesInfo = async () => {
+    const response = await getProfile();
+    const profileJson = await checkStatus(response);
+    const likesRemaining = profileJson.data.likes.likes_remaining;
+    const rateLimited = profileJson.data.likes.rate_limited_until;
+    return {likes: likesRemaining, limit: rateLimited};
 };
 
 const checkSuperLikes = async () => {
@@ -62,4 +70,4 @@ const checkStatus = async (response) => {
     }
 };
 
-module.exports = {setToken, getProfile, getUserProfile, getFeed, likeProfile, rejectProfile};
+module.exports = {setToken, getProfile, getUserProfile, getFeed, likeProfile, rejectProfile, getLikesInfo};
