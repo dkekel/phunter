@@ -125,7 +125,7 @@
         this.config = config;
       },
       hasLikes() {
-        return this.likesCount > 0;
+        return this.likesInfo.likes > 0;
       },
       async hunt() {
         this.result = [];
